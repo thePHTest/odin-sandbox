@@ -1,3 +1,4 @@
 package sandbox
 
-DllTest0 :: #type proc();
+PrintlnProc :: #type  proc(args: ..any, sep := " ") -> int;
+DllTest0Proc :: #type proc(print : PrintlnProc);
