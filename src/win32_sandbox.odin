@@ -52,13 +52,13 @@ day3_part2 :: proc() {
 	oxygen_generator_rating : int
 	{
 		// NOTE: Oxygen generator rating (tie_zero = false)
-		tie_zero := false
+		oxygen := true
 		place := 0
 		start := day3_input
-		selected, count := select(&start, place, tie_zero)
+		selected, count := select(&start, place, oxygen)
 		for count > 1 {
 			place += 1
-			selected, count = select(&selected, place, tie_zero)
+			selected, count = select(&selected, place, oxygen)
 		}
 
 		rating_str := strings.trim_space(selected)
@@ -74,14 +74,14 @@ day3_part2 :: proc() {
 
 	co2_scrubber_rating : int
 	{
-		// NOTE: CO2 scrubber rating (tie_zero = true)
-		tie_zero := true
+		// NOTE: CO2 scrubber rating
+		oxygen := false
 		place := 0
 		start := day3_input
-		selected, count := select(&start, place, tie_zero)
+		selected, count := select(&start, place, oxygen)
 		for count > 1 {
 			place += 1
-			selected, count = select(&selected, place, tie_zero)
+			selected, count = select(&selected, place, oxygen)
 		}
 
 		rating_str := strings.trim_space(selected)
