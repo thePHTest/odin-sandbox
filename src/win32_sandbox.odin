@@ -10,6 +10,94 @@ day1_input := string(#load("../aoc/day1.txt"))
 day2_input := string(#load("../aoc/day2.txt"))
 day3_input := string(#load("../aoc/day3.txt"))
 
+select :: proc(input : ^string, place : int, oxygen : bool) -> (string, int) {
+	line, ok := strings.split_iterator(input, "\n")
+	line = strings.trim_space(line)
+
+	str_builder_0 := strings.make_builder()
+	str_builder_1 := strings.make_builder()
+	str_builders : []^strings.Builder = {&str_builder_0, &str_builder_1}
+
+	counts : [2]int
+	for ok {
+		place_bit := line[place:place+1]
+		val := strconv.atoi(place_bit)
+		counts[val] += 1
+		strings.write_string(str_builders[val], line)
+		strings.write_string(str_builders[val], "\n")
+
+		line, ok = strings.split_iterator(input, "\n")
+		line = strings.trim_space(line)
+	}
+
+	idx : int
+	if oxygen {
+		idx = 0 if counts[0] > counts[1] else 1
+	} else {
+		idx = 0 if counts[0] <= counts[1] else 1
+	}
+	return strings.to_string(str_builders[idx]^), counts[idx]
+}
+
+day3_part2 :: proc() {
+	input := day3_input
+
+	line, ok := strings.split_iterator(&input, "\n")
+	line = strings.trim_space(line)
+	num_bins := len(line)
+	bins := make([]int, num_bins)
+	defer delete(bins)
+
+
+	oxygen_generator_rating : int
+	{
+		// NOTE: Oxygen generator rating (tie_zero = false)
+		tie_zero := false
+		place := 0
+		start := day3_input
+		selected, count := select(&start, place, tie_zero)
+		for count > 1 {
+			place += 1
+			selected, count = select(&selected, place, tie_zero)
+		}
+
+		rating_str := strings.trim_space(selected)
+		rating := 0
+		for r, idx in rating_str {
+			str := utf8.runes_to_string({r})
+			val := strconv.atoi(str)
+			rating += val << (uint(len(rating_str)) - uint(idx) - 1)
+		}
+		log.info("Oxygen Generator Rating:", rating, selected)
+		oxygen_generator_rating = rating
+	}
+
+	co2_scrubber_rating : int
+	{
+		// NOTE: CO2 scrubber rating (tie_zero = true)
+		tie_zero := true
+		place := 0
+		start := day3_input
+		selected, count := select(&start, place, tie_zero)
+		for count > 1 {
+			place += 1
+			selected, count = select(&selected, place, tie_zero)
+		}
+
+		rating_str := strings.trim_space(selected)
+		rating := 0
+		for r, idx in rating_str {
+			str := utf8.runes_to_string({r})
+			val := strconv.atoi(str)
+			rating += val << (uint(len(rating_str)) - uint(idx) - 1)
+		}
+		log.info("CO2 Scrubber Rating:", rating, selected)
+		co2_scrubber_rating = rating
+	}
+
+	log.info("Life support rating:", oxygen_generator_rating*co2_scrubber_rating)
+}
+
 day3_part1 :: proc() {
 	input := day3_input
 
@@ -173,5 +261,6 @@ main :: proc() {
 	/*day1_part2()*/
 	/*day2_part1()*/
 	/*day2_part2()*/
-	day3_part1()
+	/*day3_part1()*/
+	day3_part2()
 }
