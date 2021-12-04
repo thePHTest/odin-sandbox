@@ -39,62 +39,33 @@ select :: proc(input : ^string, place : int, oxygen : bool) -> (string, int) {
 	return strings.to_string(str_builders[idx]^), counts[idx]
 }
 
+get_rating :: proc(oxygen: bool) -> int {
+	place := 0
+	start := day3_input
+	selected, count := select(&start, place, oxygen)
+	for count > 1 {
+		place += 1
+		selected, count = select(&selected, place, oxygen)
+	}
+
+	rating_str := strings.trim_space(selected)
+	rating := 0
+	for r, idx in rating_str {
+		str := utf8.runes_to_string({r})
+		val := strconv.atoi(str)
+		rating += val << (uint(len(rating_str)) - uint(idx) - 1)
+	}
+	return rating
+}
+
 day3_part2 :: proc() {
 	input := day3_input
 
 	line, ok := strings.split_iterator(&input, "\n")
 	line = strings.trim_space(line)
-	num_bins := len(line)
-	bins := make([]int, num_bins)
-	defer delete(bins)
 
-
-	oxygen_generator_rating : int
-	{
-		// NOTE: Oxygen generator rating (tie_zero = false)
-		oxygen := true
-		place := 0
-		start := day3_input
-		selected, count := select(&start, place, oxygen)
-		for count > 1 {
-			place += 1
-			selected, count = select(&selected, place, oxygen)
-		}
-
-		rating_str := strings.trim_space(selected)
-		rating := 0
-		for r, idx in rating_str {
-			str := utf8.runes_to_string({r})
-			val := strconv.atoi(str)
-			rating += val << (uint(len(rating_str)) - uint(idx) - 1)
-		}
-		log.info("Oxygen Generator Rating:", rating, selected)
-		oxygen_generator_rating = rating
-	}
-
-	co2_scrubber_rating : int
-	{
-		// NOTE: CO2 scrubber rating
-		oxygen := false
-		place := 0
-		start := day3_input
-		selected, count := select(&start, place, oxygen)
-		for count > 1 {
-			place += 1
-			selected, count = select(&selected, place, oxygen)
-		}
-
-		rating_str := strings.trim_space(selected)
-		rating := 0
-		for r, idx in rating_str {
-			str := utf8.runes_to_string({r})
-			val := strconv.atoi(str)
-			rating += val << (uint(len(rating_str)) - uint(idx) - 1)
-		}
-		log.info("CO2 Scrubber Rating:", rating, selected)
-		co2_scrubber_rating = rating
-	}
-
+	oxygen_generator_rating := get_rating(true)
+	co2_scrubber_rating := get_rating(false)
 	log.info("Life support rating:", oxygen_generator_rating*co2_scrubber_rating)
 }
 
