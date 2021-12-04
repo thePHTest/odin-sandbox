@@ -1,11 +1,48 @@
 package main
 
 import "core:log"
+import "core:math"
+import "core:unicode/utf8"
 import "core:strings"
 import "core:strconv"
 
 day1_input := string(#load("../aoc/day1.txt"))
 day2_input := string(#load("../aoc/day2.txt"))
+day3_input := string(#load("../aoc/day3.txt"))
+
+day3_part1 :: proc() {
+	input := day3_input
+
+	line, ok := strings.split_iterator(&input, "\n")
+	line = strings.trim_space(line)
+	num_bins := len(line)
+	bins := make([]int, num_bins)
+	defer delete(bins)
+
+	n := 0
+	for ok {
+		n += 1
+		for r, idx in line {
+			str := utf8.runes_to_string({r})
+			val := strconv.atoi(str)
+			bins[idx] += val
+		}
+		line, ok = strings.split_iterator(&input, "\n")
+		line = strings.trim_space(line)
+	}
+
+	gamma := 0
+	epsilon := 0
+	for bin, idx in &bins {
+		bin = bin / (n / 2)
+		gamma += bin << uint(num_bins - idx - 1)
+		epsilon += (1 - bin) << uint(num_bins - idx - 1)
+	}
+
+	log.infof("Gamma: {}, %b", gamma, gamma)
+	log.infof("Epsilon: {}, %b", epsilon, epsilon)
+	log.info("Gamma*Epsilon = Total Power Consumption:", gamma*epsilon)
+}
 
 day2_part2 :: proc() {
 	input := day2_input
@@ -17,6 +54,7 @@ day2_part2 :: proc() {
 	line, ok := strings.split_iterator(&input, "\n")
 	for ok {
 		fields := strings.fields(line)
+		defer delete(fields)
 		val, conv_ok := strconv.parse_int(strings.trim_space(fields[1]))
 		if !conv_ok {
 			log.fatal("Error parsing int")
@@ -133,6 +171,7 @@ main :: proc() {
 	context.logger = log.create_console_logger()
 	/*day1_part1()*/
 	/*day1_part2()*/
-	day2_part1()
-	day2_part2()
+	/*day2_part1()*/
+	/*day2_part2()*/
+	day3_part1()
 }
