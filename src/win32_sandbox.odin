@@ -51,12 +51,13 @@ day6 :: proc() {
 }
 
 // NOTE: This grid is shared for day5 part1 and part2. Can't run both with clean data atm
-grid : [999][999]int = {}
 
 day5_part2 :: proc() {
 	input := day5_input
 	line, ok := strings.split_iterator(&input, "\n")
 
+	grid := new([999][999]int)
+	defer free(grid)
 	for ok {
 		fproc := proc(r: rune) -> bool {
 			return r == ' ' || r == ',' || r == '\n'
@@ -109,6 +110,8 @@ day5_part1 :: proc() {
 	input := day5_input
 	line, ok := strings.split_iterator(&input, "\n")
 
+	grid := new([999][999]int)
+	defer free(grid)
 	for ok {
 		fproc := proc(r: rune) -> bool {
 			return r == ' ' || r == ',' || r == '\n'
