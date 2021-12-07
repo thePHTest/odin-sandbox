@@ -18,7 +18,7 @@ sum_range :: proc(x: int) -> int {
 	return int(f32(x+1)*f32(x)/2.0)
 }
 
-day7 :: proc() {
+day7_part2 :: proc() {
 	input := day7_input
 
 	str, ok := strings.split_iterator(&input, ",")
@@ -52,7 +52,39 @@ day7 :: proc() {
 	log.info(min_val)
 }
 
-// NOTE: This grid is shared for day5 part1 and part2. Can't run both with clean data atm
+day7_part1 :: proc() {
+	input := day7_input
+
+	str, ok := strings.split_iterator(&input, ",")
+	locs := make([dynamic]int)
+	for ok {
+		str = strings.trim_space(str)
+		val := strconv.atoi(str)
+		append(&locs, val)
+		str, ok = strings.split_iterator(&input, ",")
+	}
+
+	max_val := 0
+	sum := 0
+	for v in locs {
+		sum += v
+		max_val = max(max_val,v)
+	}
+
+	align_costs := make([]int, max_val)
+
+	for x,idx in align_costs {
+		for v in locs {
+			align_costs[idx] += abs(v-idx)
+		}
+	}
+
+	min_val : int = max(int)
+	for x in align_costs {
+		min_val = min(min_val, x)
+	}
+	log.info(min_val)
+}
 
 day5_part2 :: proc() {
 	input := day5_input
@@ -549,5 +581,6 @@ main :: proc() {
 	/*day5_part1()*/
 	/*day5_part2()*/
 	/*day6()*/
-	day7()
+	day7_part1()
+	day7_part2()
 }
