@@ -23,6 +23,7 @@ day7_part2 :: proc() {
 
 	str, ok := strings.split_iterator(&input, ",")
 	locs := make([dynamic]int)
+	defer delete(locs)
 	for ok {
 		str = strings.trim_space(str)
 		val := strconv.atoi(str)
@@ -38,6 +39,7 @@ day7_part2 :: proc() {
 	}
 
 	align_costs := make([]int, max_val)
+	defer delete(align_costs)
 
 	for x,idx in align_costs {
 		for v in locs {
