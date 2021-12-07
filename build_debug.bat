@@ -3,6 +3,6 @@ set bat_dir=%~dp0
 pushd %bat_dir%
 IF NOT EXIST .\debug_build mkdir .\debug_build
 pushd debug_build
-odin build ../src/win32_sandbox.odin -debug
-odin build ../src/app_sandbox.odin -debug -build-mode:dll
+odin build ../src/win32_sandbox.odin -debug -vet
+odin build ../src/app_sandbox.odin -debug -build-mode:dll -vet
 popd popd

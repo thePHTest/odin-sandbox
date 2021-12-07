@@ -3,7 +3,6 @@ import sb "sandbox"
 
 import "core:fmt"
 import "core:log"
-import "core:os"
 
 test_global := GlobalAssign();
 
@@ -14,7 +13,6 @@ DllTest0 : sb.DllTest0Proc : proc(println : sb.PrintlnProc) {
     context.logger = test_log;
     log.info("Does log.info go to stdout?");
     println("Does this print?");
-    test_str := "How do I make a fully functional fmt.println pass through??";
     println(test_global);
 }
 

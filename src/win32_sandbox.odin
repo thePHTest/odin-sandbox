@@ -1,8 +1,7 @@
 package main
 
 import "core:log"
-import "core:math"
-import "core:mem"
+/*import "core:math"*/
 import "core:unicode/utf8"
 import "core:strings"
 import "core:strconv"
@@ -13,41 +12,44 @@ day3_input := string(#load("../aoc/day3.txt"))
 day4_input := string(#load("../aoc/day4.txt"))
 day5_input := string(#load("../aoc/day5.txt"))
 day6_input := string(#load("../aoc/day6.txt"))
+day7_input := string(#load("../aoc/day7.txt"))
 
-day6 :: proc() {
-	input := day6_input
+sum_range :: proc(x: int) -> int {
+	return int(f32(x+1)*f32(x)/2.0)
+}
 
-	day_bins : [9]int
+day7 :: proc() {
+	input := day7_input
+
 	str, ok := strings.split_iterator(&input, ",")
+	locs := make([dynamic]int)
 	for ok {
 		str = strings.trim_space(str)
 		val := strconv.atoi(str)
-		day_bins[val] += 1
+		append(&locs, val)
 		str, ok = strings.split_iterator(&input, ",")
 	}
 
-	day_bins_swap := day_bins
-	num_new_fish := 0
-	for i in 1..256 {
-		for count,day in day_bins_swap {
-			if day == 0 {
-				num_new_fish = count
-				day_bins[8] = count
-			} else {
-				day_bins[day-1] = count
-			}
-		}
-		day_bins[6] += num_new_fish
-		num_new_fish = 0
-		/*log.info(day_bins)*/
-		day_bins, day_bins_swap = day_bins_swap, day_bins
+	max_val := 0
+	sum := 0
+	for v in locs {
+		sum += v
+		max_val = max(max_val,v)
 	}
 
-	sum := 0
-	for count in day_bins_swap {
-		sum += count
+	align_costs := make([]int, max_val)
+
+	for x,idx in align_costs {
+		for v in locs {
+			align_costs[idx] += sum_range(abs(v-idx))
+		}
 	}
-	log.info(sum)
+
+	min_val : int = max(int)
+	for x in align_costs {
+		min_val = min(min_val, x)
+	}
+	log.info(min_val)
 }
 
 // NOTE: This grid is shared for day5 part1 and part2. Can't run both with clean data atm
@@ -57,6 +59,10 @@ day5_part2 :: proc() {
 	line, ok := strings.split_iterator(&input, "\n")
 
 	grid := new([999][999]int)
+	linear_grid := cast(^[999*999]int)grid
+	for val in linear_grid {
+		log.info(val)
+	}
 	defer free(grid)
 	for ok {
 		fproc := proc(r: rune) -> bool {
@@ -95,11 +101,9 @@ day5_part2 :: proc() {
 		}
 	}
 
-	max_val := 0
 	num_overlaps := 0
-	for row,y in grid {
-		for val,x in row {
-			/*max_val = max(max_val, val)*/
+	for row in grid {
+		for val in row {
 			if val >= 2 do num_overlaps += 1
 		}
 	}
@@ -143,8 +147,8 @@ day5_part1 :: proc() {
 
 	max_val := 0
 	num_overlaps := 0
-	for column,y in grid {
-		for val,x in column {
+	for column in grid {
+		for val in column {
 			max_val = max(max_val, val)
 			if val >= 2 do num_overlaps += 1
 		}
@@ -226,7 +230,6 @@ day4_part2 :: proc() {
 		line, ok = strings.split_iterator(&input, "\n")
 	}
 
-	winning_board : Board
 	latest_call : int
 	final_board : Board
 	final_board_last_call : int
@@ -367,6 +370,7 @@ day3_part2 :: proc() {
 	input := day3_input
 
 	line, ok := strings.split_iterator(&input, "\n")
+	_ = ok
 	line = strings.trim_space(line)
 
 	oxygen_generator_rating := get_rating(true)
@@ -519,7 +523,8 @@ day1_part1 :: proc() {
 		line, ok = strings.split_iterator(&input, "\n")
 		if ok {
 			line = strings.trim_space(line)
-			curr, conv_ok := strconv.parse_int(line)
+			curr : int
+			curr, conv_ok = strconv.parse_int(line)
 			if conv_ok {
 				if curr > last {
 					increased_count += 1
@@ -543,5 +548,6 @@ main :: proc() {
 	/*day4_part2()*/
 	/*day5_part1()*/
 	/*day5_part2()*/
-	day6()
+	/*day6()*/
+	day7()
 }
