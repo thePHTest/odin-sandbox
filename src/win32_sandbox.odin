@@ -2,6 +2,7 @@ package main
 
 import "core:log"
 import "core:math"
+import "core:mem"
 import "core:unicode/utf8"
 import "core:strings"
 import "core:strconv"
@@ -9,6 +10,307 @@ import "core:strconv"
 day1_input := string(#load("../aoc/day1.txt"))
 day2_input := string(#load("../aoc/day2.txt"))
 day3_input := string(#load("../aoc/day3.txt"))
+day4_input := string(#load("../aoc/day4.txt"))
+day5_input := string(#load("../aoc/day5.txt"))
+day6_input := string(#load("../aoc/day6.txt"))
+
+day6 :: proc() {
+	input := day6_input
+
+	day_bins : [9]int
+	str, ok := strings.split_iterator(&input, ",")
+	for ok {
+		str = strings.trim_space(str)
+		val := strconv.atoi(str)
+		day_bins[val] += 1
+		str, ok = strings.split_iterator(&input, ",")
+	}
+
+	day_bins_swap := day_bins
+	num_new_fish := 0
+	for i in 1..256 {
+		for count,day in day_bins_swap {
+			if day == 0 {
+				num_new_fish = count
+				day_bins[8] = count
+			} else {
+				day_bins[day-1] = count
+			}
+		}
+		day_bins[6] += num_new_fish
+		num_new_fish = 0
+		/*log.info(day_bins)*/
+		day_bins, day_bins_swap = day_bins_swap, day_bins
+	}
+
+	sum := 0
+	for count in day_bins_swap {
+		sum += count
+	}
+	log.info(sum)
+}
+
+// NOTE: This grid is shared for day5 part1 and part2. Can't run both with clean data atm
+grid : [999][999]int = {}
+
+day5_part2 :: proc() {
+	input := day5_input
+	line, ok := strings.split_iterator(&input, "\n")
+
+	for ok {
+		fproc := proc(r: rune) -> bool {
+			return r == ' ' || r == ',' || r == '\n'
+		}
+		fields := strings.fields_proc(line, fproc)
+		/*log.info(fields)*/
+		line, ok = strings.split_iterator(&input, "\n")
+
+		x1 := strconv.atoi(fields[0])
+		y1 := strconv.atoi(fields[1])
+	// "->" is at fields[2]
+		x2 := strconv.atoi(fields[3])
+		y2 := strconv.atoi(fields[4])
+
+		if x1 == x2 {
+			dist := abs(y2-y1)
+			min := min(y1,y2)
+			for i in 0..dist {
+				/*grid[x1][min+i] += 1*/
+				grid[x1][min+i] += 1
+			}
+		} else if y1 == y2 {
+			dist := abs(x2-x1)
+			min := min(x1,x2)
+			for i in 0..dist {
+				grid[min+i][y1] += 1
+			}
+		} else if abs(y2-y1) == abs(x2-x1) {
+			dist := abs(y2-y1)
+			x_sign := dist / (x2-x1)
+			y_sign := dist / (y2-y1)
+			for i in 0..dist {
+				grid[x1+i*x_sign][y1+i*y_sign] += 1
+			}
+		}
+	}
+
+	max_val := 0
+	num_overlaps := 0
+	for row,y in grid {
+		for val,x in row {
+			/*max_val = max(max_val, val)*/
+			if val >= 2 do num_overlaps += 1
+		}
+	}
+	log.info("num overlaps:", num_overlaps)
+}
+
+day5_part1 :: proc() {
+	input := day5_input
+	line, ok := strings.split_iterator(&input, "\n")
+
+	for ok {
+		fproc := proc(r: rune) -> bool {
+			return r == ' ' || r == ',' || r == '\n'
+		}
+		fields := strings.fields_proc(line, fproc)
+		/*log.info(fields)*/
+		line, ok = strings.split_iterator(&input, "\n")
+
+		x1 := strconv.atoi(fields[0])
+		y1 := strconv.atoi(fields[1])
+	// "->" is at fields[2]
+		x2 := strconv.atoi(fields[3])
+		y2 := strconv.atoi(fields[4])
+
+		if x1 == x2 {
+			dist := abs(y2-y1)
+			min := min(y1,y2)
+			for i in 0..dist {
+				grid[x1][min+i] += 1
+			}
+		} else if y1 == y2 {
+			dist := abs(x2-x1)
+			min := min(x1,x2)
+			for i in 0..dist {
+				grid[min+i][y1] += 1
+			}
+		}
+	}
+
+	max_val := 0
+	num_overlaps := 0
+	for column,y in grid {
+		for val,x in column {
+			max_val = max(max_val, val)
+			if val >= 2 do num_overlaps += 1
+		}
+	}
+	log.info("num overlaps:", num_overlaps)
+}
+
+Board_Space :: struct {
+	val : int,
+	marked : bool,
+}
+
+Board :: struct {
+	won : bool,
+	unmarked_score : int,
+	spaces : [5][5]Board_Space,
+}
+
+board_score :: proc(board : Board) -> int {
+	sum : int
+	for row in board.spaces {
+		for space in row {
+			if !space.marked {
+				sum += space.val
+			}
+		}
+	}
+	return sum
+}
+
+check_board_win :: proc(board : Board) -> bool {
+	col_wins : [len(board.spaces[0])]bool
+	for win in &col_wins {
+		win = true
+	}
+	for row, idx in board.spaces {
+		row_win := true
+		for space, idx2 in row {
+			row_win &= space.marked
+			col_wins[idx2] &= space.marked
+		}
+		if row_win {
+			return true
+		}
+	}
+
+	col_won := false
+	for win in col_wins {
+		col_won |= win
+	}
+	return col_won
+}
+
+day4_part2 :: proc() {
+	input := day4_input
+	line, ok := strings.split_iterator(&input, "\n")
+	val_strs := strings.split(line, ",")
+	called_nums := make([]int, len(val_strs))
+	defer delete(called_nums)
+	for str, idx in val_strs {
+		called_nums[idx] = strconv.atoi(str)
+	}
+
+	// Consume empty line
+	line, ok = strings.split_iterator(&input, "\n")
+	boards := make([dynamic]Board)
+	defer delete(boards)
+	for ok {
+		board : Board
+		for i := 0; i < 5; i += 1 {
+			line, ok = strings.split_iterator(&input, "\n")
+			val_strs := strings.fields(line)
+			for str, idx in val_strs {
+				board.spaces[i][idx].val = strconv.atoi(str)
+			}
+		}
+		append(&boards, board)
+		// Consume empty line
+		line, ok = strings.split_iterator(&input, "\n")
+	}
+
+	winning_board : Board
+	latest_call : int
+	final_board : Board
+	final_board_last_call : int
+	call_num : for called in called_nums {
+		latest_call = called
+		for board in &boards {
+			if board.won {
+				continue
+			}
+			for row in &board.spaces {
+				for space in &row {
+					if space.val == called {
+						space.marked = true
+						if check_board_win(board) {
+							board.won = true
+							board.unmarked_score = board_score(board)
+							final_board = board
+							final_board_last_call = called
+						}
+					}
+				}
+			}
+		}
+	}
+
+	log.info("Day 4 Part 2 (sum of unmarked spaces on final winning board)*(latest_call):", final_board.unmarked_score*final_board_last_call)
+}
+
+day4_part1 :: proc() {
+	input := day4_input
+	line, ok := strings.split_iterator(&input, "\n")
+	val_strs := strings.split(line, ",")
+	called_nums := make([]int, len(val_strs))
+	defer delete(called_nums)
+	for str, idx in val_strs {
+		called_nums[idx] = strconv.atoi(str)
+	}
+
+	// Consume empty line
+	line, ok = strings.split_iterator(&input, "\n")
+	boards := make([dynamic]Board)
+	defer delete(boards)
+	for ok {
+		board : Board
+		for i := 0; i < 5; i += 1 {
+			line, ok = strings.split_iterator(&input, "\n")
+			val_strs := strings.fields(line)
+			for str, idx in val_strs {
+				board.spaces[i][idx].val = strconv.atoi(str)
+			}
+		}
+		append(&boards, board)
+		// Consume empty line
+		line, ok = strings.split_iterator(&input, "\n")
+	}
+
+	winning_board : Board
+	latest_call : int
+	call_num : for called in called_nums {
+		latest_call = called
+		for board in &boards {
+			for row in &board.spaces {
+				for space in &row {
+					if space.val == called {
+						space.marked = true
+						if check_board_win(board) {
+							log.info("Found winner")
+							winning_board = board
+							break call_num
+						}
+					}
+				}
+			}
+		}
+	}
+
+	// Sum unmarked spaces of winning board
+	sum : int
+	for row in winning_board.spaces {
+		for space in row {
+			if !space.marked {
+				sum += space.val
+			}
+		}
+	}
+	log.info("Day 4 Part 1 (sum of unmarked spaces on winning board)*(latest_call):", sum*latest_call)
+}
 
 select :: proc(input : ^string, place : int, oxygen : bool) -> (string, int) {
 	line, ok := strings.split_iterator(input, "\n")
@@ -233,5 +535,10 @@ main :: proc() {
 	/*day2_part1()*/
 	/*day2_part2()*/
 	/*day3_part1()*/
-	day3_part2()
+	/*day3_part2()*/
+	/*day4_part1()*/
+	/*day4_part2()*/
+	/*day5_part1()*/
+	/*day5_part2()*/
+	day6()
 }
