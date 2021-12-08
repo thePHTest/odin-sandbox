@@ -39,13 +39,7 @@ day8 :: proc() {
 	for d in &digits {
 		for e in &d {
 			e = strings.trim_space(e)
-			if len(e) == 2 {
-				count_1478 += 1
-			} else if len(e) == 3 {
-				count_1478 += 1
-			} else if len(e) == 4 {
-				count_1478 += 1
-			} else if len(e) == 7 {
+			if len(e) == 2 || len(e) == 3 || len(e) == 4 || len(e) == 7 {
 				count_1478 += 1
 			}
 		}
