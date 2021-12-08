@@ -108,7 +108,6 @@ day8 :: proc() {
 			if mismatches == 1 {
 				g_rune = mismatch
 				sigs[9] = s
-				sigs[9] = s
 				sig9_idx = idx
 			}
 		}
