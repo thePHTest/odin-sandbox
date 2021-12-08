@@ -1,7 +1,7 @@
 package main
 
 import "core:log"
-/*import "core:math"*/
+import "core:math"
 import "core:unicode/utf8"
 import "core:strings"
 import "core:strconv"
@@ -13,6 +13,189 @@ day4_input := string(#load("../aoc/day4.txt"))
 day5_input := string(#load("../aoc/day5.txt"))
 day6_input := string(#load("../aoc/day6.txt"))
 day7_input := string(#load("../aoc/day7.txt"))
+day8_input := string(#load("../aoc/day8.txt"))
+
+Signal :: distinct []string
+Digits :: distinct []string
+
+day8 :: proc() {
+	input := day8_input
+	str, ok := strings.split_iterator(&input, "\n")
+	signals := make([dynamic]Signal)
+	digits := make([dynamic]Digits)
+	for ok {
+		signals_str, signals_ok := strings.split_iterator(&str, "|")
+		_ = signals_ok
+		signal := strings.split(signals_str, " ")
+		display := strings.split(str, " ")
+		append(&signals, cast(Signal)signal[:len(signal)-1])
+		append(&digits, cast(Digits)display[1:])
+		str, ok = strings.split_iterator(&input, "\n")
+	}
+
+	count_1478 := 0
+	for d in &digits {
+		for e in &d {
+			e = strings.trim_space(e)
+			if len(e) == 2 {
+				count_1478 += 1
+			} else if len(e) == 3 {
+				count_1478 += 1
+			} else if len(e) == 4 {
+				count_1478 += 1
+			} else if len(e) == 7 {
+				count_1478 += 1
+			}
+		}
+	}
+	log.info("Count of 1,4,7,8:", count_1478)
+
+	a_rune : rune
+	len5_sigs : [3]string
+	len6_sigs : [3]string
+	g_rune : rune
+	d_rune : rune
+	b_rune : rune
+	sigs : [10]string
+
+	total_val : f32 = 0
+
+	for s, line_idx in &signals {
+		len5_idx := 0
+		len6_idx := 0
+		for e in &s {
+			e = strings.trim_space(e)
+			if len(e) == 2 {
+				sigs[1] = e
+			} else if len(e) == 3 {
+				sigs[7] = e
+			} else if len(e) == 4 {
+				sigs[4] = e
+			} else if len(e) == 7 {
+				sigs[8] = e
+			} else if len(e) == 6 {
+				len6_sigs[len6_idx] = e
+				len6_idx += 1
+			} else if len(e) == 5 {
+				len5_sigs[len5_idx] = e
+				len5_idx += 1
+			}
+		}
+
+		// The rune in sig7 that is not in sig1 is the a_rune
+		for r in sigs[7] {
+			if strings.contains_rune(sigs[1], r) >= 0 {
+				continue
+			} else {
+				a_rune = r
+				break
+			}
+		}
+		/*log.info(a_rune)*/
+
+		// The signal of length 6 for sig9 containing the runes of sig4 and the a_rune has the g_rune as the final element
+		sig9_idx := 0
+		for s, idx in len6_sigs {
+			mismatches := 0
+			mismatch : rune
+			for r in s {
+				if !((strings.contains_rune(sigs[4], r) >= 0) || r == a_rune) {
+					mismatches += 1
+					mismatch = r
+				}
+			}
+
+			if mismatches == 1 {
+				g_rune = mismatch
+				sigs[9] = s
+				sigs[9] = s
+				sig9_idx = idx
+			}
+		}
+
+		// The signal of length 5 for sig3 containing the runes of sig7 and the g_rune has the d_rune as the final element
+		sig3_idx := 0
+		for s, idx in len5_sigs {
+			mismatches := 0
+			mismatch : rune
+			for r in s {
+				if !((strings.contains_rune(sigs[7], r) >= 0) || r == g_rune) {
+					mismatches += 1
+					mismatch = r
+				}
+			}
+
+			if mismatches == 1 {
+				d_rune = mismatch
+				sigs[3] = s
+				sig3_idx = idx
+			}
+		}
+
+		// The rune in sig9 not in sig3 is the b_rune
+		for r in sigs[9] {
+			if !(strings.contains_rune(sigs[3], r) >= 0) {
+				b_rune = r
+			}
+		}
+
+		// The len5 string containing a, b, and g runes is sig5
+		sig5_idx := 0
+		for s, idx in len5_sigs {
+			contains_a := strings.contains_rune(s, a_rune) >= 0
+			contains_b := strings.contains_rune(s, b_rune) >= 0
+			contains_g := strings.contains_rune(s, g_rune) >= 0
+			if contains_a && contains_b && contains_g {
+				sigs[5] = s
+				sig5_idx = idx
+				break
+			}
+		}
+
+		// The len5 string that is not the idx of sig3 and sig5 is sig2
+		for s, idx in len5_sigs {
+			if (idx != sig3_idx && idx != sig5_idx) {
+				sigs[2] = s
+				break
+			}
+		}
+
+		// The len6 string that is not the idx of sig9 and does not have d_rune is sig0
+		// The other one is sig6
+		for s, idx in len6_sigs {
+			if idx == sig9_idx {
+				continue
+			} else if strings.contains_rune(s, d_rune) >= 0 {
+				sigs[6] = s
+			} else {
+				sigs[0] = s
+			}
+		}
+
+		// Now decode the digits
+		val : f32 = 0
+		for d, d_idx in digits[line_idx] {
+			for s, s_idx in sigs {
+				if len(d) == len(s) {
+					match := true
+					for r in d {
+						if !(strings.contains_rune(s, r) >= 0) {
+							match = false
+							break
+						}
+					}
+					if match {
+						val += math.pow(10, f32(len(digits[line_idx]) - d_idx - 1))*f32(s_idx)
+						break
+					}
+				}
+			}
+		}
+		total_val += val
+	}
+	log.info("Summed display values:", total_val)
+}
+
 
 sum_range :: proc(x: int) -> int {
 	return int(f32(x+1)*f32(x)/2.0)
@@ -583,6 +766,7 @@ main :: proc() {
 	/*day5_part1()*/
 	/*day5_part2()*/
 	/*day6()*/
-	day7_part1()
-	day7_part2()
+	/*day7_part1()*/
+	/*day7_part2()*/
+	day8()
 }
