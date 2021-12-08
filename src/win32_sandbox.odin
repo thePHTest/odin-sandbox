@@ -22,7 +22,9 @@ day8 :: proc() {
 	input := day8_input
 	str, ok := strings.split_iterator(&input, "\n")
 	signals := make([dynamic]Signal)
+	defer delete(signals)
 	digits := make([dynamic]Digits)
+	defer delete(digits)
 	for ok {
 		signals_str, signals_ok := strings.split_iterator(&str, "|")
 		_ = signals_ok
