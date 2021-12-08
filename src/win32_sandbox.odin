@@ -272,6 +272,42 @@ day7_part1 :: proc() {
 	log.info(min_val)
 }
 
+day6 :: proc() {
+	input := day6_input
+
+	day_bins : [9]int
+	str, ok := strings.split_iterator(&input, ",")
+	for ok {
+		str = strings.trim_space(str)
+		val := strconv.atoi(str)
+		day_bins[val] += 1
+		str, ok = strings.split_iterator(&input, ",")
+	}
+
+	day_bins_swap := day_bins
+	num_new_fish := 0
+	for i in 1..256 {
+		for count,day in day_bins_swap {
+			if day == 0 {
+				num_new_fish = count
+				day_bins[8] = count
+			} else {
+				day_bins[day-1] = count
+			}
+		}
+		day_bins[6] += num_new_fish
+		num_new_fish = 0
+		/*log.info(day_bins)*/
+		day_bins, day_bins_swap = day_bins_swap, day_bins
+	}
+
+	sum := 0
+	for count in day_bins_swap {
+		sum += count
+	}
+	log.info(sum)
+}
+
 day5_part2 :: proc() {
 	input := day5_input
 	line, ok := strings.split_iterator(&input, "\n")
