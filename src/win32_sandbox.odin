@@ -22,7 +22,7 @@ Cell :: struct {
 	in_basin : bool,
 }
 
-expand_basin :: proc(grid : ^[102][102]Cell, row : int, col : int) -> int {
+expand_basin :: proc(grid : ^[][]Cell, row : int, col : int) -> int {
 	val := grid[row][col]
 	res := 0
 	if val.val < 9 && !val.in_basin {
@@ -38,7 +38,21 @@ expand_basin :: proc(grid : ^[102][102]Cell, row : int, col : int) -> int {
 
 day9 :: proc() {
 	input := day9_input
-	grid : [102][102]Cell
+	lines := strings.split(input, "\n")
+	num_rows := len(lines) - 1 + 2
+	num_cols := len(lines[0]) - 1 + 2
+	/*log.info(num_lines)*/
+	/*make_grid := make([]int, num_rows*num_cols)*/
+	/*make_grid := make([][]Cell, num_rows)*/
+	/*grid := make_grid[:num_rows][:num_cols]*/
+	/*grid := cast([][]int)make_grid[:num_rows][:num_cols]*/
+	grid := make([][]Cell, num_rows)
+	defer delete(grid)
+    for row in &grid {
+        row = make([]Cell, num_cols)
+    }
+	defer { for row in &grid { delete(row) } }
+
 	for row in &grid {
 		for v in &row {
 			v.val = max(int)
