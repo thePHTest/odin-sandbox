@@ -3,6 +3,7 @@ package main
 import "core:log"
 import "core:math"
 import "core:unicode/utf8"
+import "core:slice"
 import "core:strings"
 import "core:strconv"
 
@@ -14,6 +15,77 @@ day5_input := string(#load("../aoc/day5.txt"))
 day6_input := string(#load("../aoc/day6.txt"))
 day7_input := string(#load("../aoc/day7.txt"))
 day8_input := string(#load("../aoc/day8.txt"))
+day9_input := string(#load("../aoc/day9.txt"))
+
+Cell :: struct {
+	val : int,
+	in_basin : bool,
+}
+
+expand_basin :: proc(grid : ^[102][102]Cell, row : int, col : int) -> int {
+	val := grid[row][col]
+	res := 0
+	if val.val < 9 && !val.in_basin {
+		grid[row][col].in_basin = true
+		res += 1
+		if !grid[row][col-1].in_basin do res += expand_basin(grid, row, col-1)
+		if !grid[row][col+1].in_basin do res += expand_basin(grid, row, col+1)
+		if !grid[row-1][col].in_basin do res += expand_basin(grid, row-1, col)
+		if !grid[row+1][col].in_basin do res += expand_basin(grid, row+1, col)
+	}
+	return res
+}
+
+day9 :: proc() {
+	input := day9_input
+	grid : [102][102]Cell
+	for row in &grid {
+		for v in &row {
+			v.val = max(int)
+		}
+	}
+
+	str, ok := strings.split_iterator(&input, "\n")
+	idx := 0
+	for ok {
+		str = strings.trim_space(str)
+		for r, idx2 in str {
+			grid[idx + 1][idx2 + 1] = Cell{val=strconv.atoi(utf8.runes_to_string({r}))}
+		}
+		str, ok = strings.split_iterator(&input, "\n")
+		idx += 1
+	}
+
+	risk_level := 0
+	rows := len(grid)
+	cols := len(grid[0])
+	basin_sizes := make([dynamic]int)
+	defer delete(basin_sizes)
+	for i := 1; i < rows - 1; i += 1 {
+		for j := 1; j < cols -1; j += 1 {
+			val := grid[i][j].val
+			left := grid[i][j-1].val
+			right := grid[i][j+1].val
+			up := grid[i-1][j].val
+			down := grid[i+1][j].val
+			if val < left && val < right && val < up && val < down {
+				risk_level += val+1
+				basin_size := expand_basin(&grid, i, j)
+				append(&basin_sizes, basin_size)
+			}
+		}
+	}
+
+	log.info("Part 1 Risk Level:", risk_level)
+	
+	slice.sort(basin_sizes[:])
+	log.info(basin_sizes)
+	mul_3_large_basins := 1
+	for i in 0..<3 {
+		mul_3_large_basins *= basin_sizes[len(basin_sizes)-1-i]
+	}
+	log.info("Part 2- 3 largest baisns mul:", mul_3_large_basins)
+}
 
 Signal :: distinct []string
 Digits :: distinct []string
@@ -799,5 +871,6 @@ main :: proc() {
 	/*day6()*/
 	/*day7_part1()*/
 	/*day7_part2()*/
-	day8()
+	/*day8()*/
+	day9()
 }
