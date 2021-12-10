@@ -16,6 +16,67 @@ day6_input := string(#load("../aoc/day6.txt"))
 day7_input := string(#load("../aoc/day7.txt"))
 day8_input := string(#load("../aoc/day8.txt"))
 day9_input := string(#load("../aoc/day9.txt"))
+day10_input := string(#load("../aoc/day10.txt"))
+
+
+open_chars : []rune = {'(', '[', '{', '<'}
+close_chars : []rune = {')', ']', '}', '>'}
+corrupted_vals : []int = {3, 57, 1197, 25137}
+
+day10 :: proc() {
+	input := day10_input
+	line, ok := strings.split_iterator(&input, "\n")
+
+	corrupt_score := 0
+	missing_scores := make([dynamic]int)
+	defer delete(missing_scores)
+	for ok {
+		line = strings.trim_space(line)
+		open_chars_stack := make([dynamic]rune)
+		defer delete(open_chars_stack)
+		corrupt := false
+		runes_loop : for r in line {
+			if slice.contains(open_chars[:], r) {
+				append(&open_chars_stack, r)
+			} else {
+				for c, idx in close_chars {
+					if r == c {
+						if open_chars[idx] != open_chars_stack[len(open_chars_stack)-1] {
+							corrupt_score += corrupted_vals[idx]
+							corrupt = true
+							break runes_loop
+						} else {
+							pop(&open_chars_stack)
+						}
+					}
+				}
+			}
+		}
+
+		if !corrupt {
+			line_missing_score := 0
+			num_missing := len(open_chars_stack)
+			for _ in 0..<num_missing {
+				c := pop(&open_chars_stack)
+				for r, idx in open_chars {
+					if c == r {
+						line_missing_score *= 5
+						line_missing_score += idx + 1
+					}
+				}
+			}
+			append(&missing_scores, line_missing_score)
+		}
+		line, ok = strings.split_iterator(&input, "\n")
+	}
+
+	slice.sort(missing_scores[:])
+	log.info(missing_scores)
+	middle_idx := len(missing_scores) / 2
+
+	log.info("Part 1 total corruption score:", corrupt_score)
+	log.info("Part 2 middle idx missing score:", missing_scores[middle_idx])
+}
 
 Cell :: struct {
 	val : int,
@@ -93,7 +154,6 @@ day9 :: proc() {
 	log.info("Part 1 Risk Level:", risk_level)
 	
 	slice.sort(basin_sizes[:])
-	log.info(basin_sizes)
 	mul_3_large_basins := 1
 	for i in 0..<3 {
 		mul_3_large_basins *= basin_sizes[len(basin_sizes)-1-i]
@@ -886,5 +946,6 @@ main :: proc() {
 	/*day7_part1()*/
 	/*day7_part2()*/
 	/*day8()*/
-	day9()
+	/*day9()*/
+	day10()
 }
