@@ -25,7 +25,7 @@ Octo :: struct {
 }
 
 octos_pitch := 0
-index_octos :: proc(row,col : int) -> int {
+index_octos :: #force_inline proc(row,col : int) -> int {
 	return (row*octos_pitch + col)
 }
 
