@@ -17,7 +17,114 @@ day7_input := string(#load("../aoc/day7.txt"))
 day8_input := string(#load("../aoc/day8.txt"))
 day9_input := string(#load("../aoc/day9.txt"))
 day10_input := string(#load("../aoc/day10.txt"))
+day11_input := string(#load("../aoc/day11.txt"))
 
+Octo :: struct {
+	val : int,
+	flashed : bool,
+}
+
+octos_pitch := 0
+index_octos :: proc(row,col : int) -> int {
+	return (row*octos_pitch + col)
+}
+
+set_edges :: proc(octos : ^[]Octo, nrows, ncols : int) {
+	for row in 0..<nrows {
+		if row == 0 || row == nrows-1 {
+			for col in 0..<ncols {
+				octos[index_octos(row, col)].val = min(int)
+			}
+		}
+		octos[index_octos(row, 0)].val = min(int)
+		octos[index_octos(row, ncols-1)].val = min(int)
+	}
+}
+
+day11 :: proc() {
+	input := day11_input
+	/*line, ok := strings.split_iterator(&input, "\n")*/
+	lines := strings.split(input, "\n")
+	nrows := len(lines) - 1
+	ncols := len(strings.trim_space(lines[0]))
+	octos_pitch = ncols+2
+	log.info(nrows)
+	log.info(ncols)
+	octos := make([]Octo, (nrows+2)*(ncols+2))
+
+	for line, row in &lines {
+		line = strings.trim_space(line)
+		for r, col in line {
+			octos[index_octos((row+1), (col+1))].val = strconv.atoi(utf8.runes_to_string({r}))
+		}
+	}
+
+	set_edges(&octos, nrows+2, ncols+2)
+	log.info(octos)
+
+	flash_count := 0
+	step := 0
+	all_flashed := false
+	for !all_flashed {
+		defer {step += 1}
+		/*log.info("Step", step)*/
+		step_flash_count := 0
+		// Increment all by 1
+		for row in 1..nrows {
+			for col in 1..ncols {
+				octos[index_octos(row, col)].val += 1
+			}
+		}
+
+		flash_occured := true
+		for flash_occured {
+			flash_occured = false
+			for row in 1..nrows {
+				for col in 1..ncols {
+					octo := &octos[index_octos(row, col)]
+					if octo.val > 9 {
+						if !octo.flashed {
+							/*log.info("flash at", row, col)*/
+							flash_occured = true
+							octo.flashed = true
+							flash_count += 1
+							step_flash_count += 1
+							for i in -1..1 {
+								for j in -1..1 {
+									if i == 0 && j == 0 {
+										continue
+									}
+									octos[index_octos((row+i), (col+j))].val += 1
+								}
+							}
+						}
+					}
+				}
+			}
+
+			/*set_edges(&octos)*/
+		}
+
+		if step_flash_count == nrows*ncols {
+			all_flashed = true
+			log.info("All flashed at step", step+1)
+		}
+
+		if (step+1) == 100 {
+			log.info("Step 100 flash_count:", flash_count)
+		}
+
+		for row in 1..11 {
+			for col in 1..11 {
+				octo := &octos[index_octos(row, col)]
+				if octo.val > 9 {
+					octo.flashed = false
+					octo.val = 0
+				}
+			}
+		}
+	}
+}
 
 open_chars : []rune = {'(', '[', '{', '<'}
 close_chars : []rune = {')', ']', '}', '>'}
@@ -947,5 +1054,6 @@ main :: proc() {
 	/*day7_part2()*/
 	/*day8()*/
 	/*day9()*/
-	day10()
+	/*day10()*/
+	day11()
 }
