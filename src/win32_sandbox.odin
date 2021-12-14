@@ -28,7 +28,6 @@ day14_part2 :: proc() {
 	line, ok := strings.split_iterator(&input, "\n")
 
 	template := strings.trim_space(line)
-	_ = template
 
 	line, ok = strings.split_iterator(&input, "\n")
 	pair_rules : map[string]rune
@@ -46,8 +45,6 @@ day14_part2 :: proc() {
 		insert, rule_ok := pair_rules[pair]
 		if rule_ok {
 			pair_counts[pair] += 1
-		} else {
-			log.infof("Pair {} isn't a rule", pair)
 		}
 	}
 	log.info("Initial rules:", pair_rules)
