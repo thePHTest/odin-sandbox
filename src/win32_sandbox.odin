@@ -27,6 +27,7 @@ day12_part2 :: proc() {
 
 	system := make(map[string][dynamic]string)
 	defer delete(system)
+	defer for k,v in system do delete(v)
 	for ok {
 		line = strings.trim_space(line)
 
@@ -114,6 +115,7 @@ day12_part1 :: proc() {
 
 	system := make(map[string][dynamic]string)
 	defer delete(system)
+	defer for k,v in system do delete(v)
 	for ok {
 		line = strings.trim_space(line)
 
@@ -135,7 +137,6 @@ day12_part1 :: proc() {
 		}
 		append(&system[caves[1]], caves[0])
 
-
 		line, ok = strings.split_iterator(&input, "\n")
 	}
 
@@ -152,6 +153,7 @@ day12_part1 :: proc() {
 	}
 
 	final_paths := make([dynamic][dynamic]string)
+	defer delete(final_paths)
 	for len(paths) > 0 {
 		new_paths := make([dynamic][dynamic]string)
 		for path in paths {
@@ -177,10 +179,13 @@ day12_part1 :: proc() {
 		}
 		/*log.info(new_paths)*/
 		paths, new_paths = new_paths, paths
+		for v in new_paths do delete(v)
 		delete(new_paths)
 	}
 	/*log.info(final_paths)*/
 	log.info("Part 1 num of unique paths:", len(final_paths))
+	for v in paths do delete(v)
+	delete(paths)
 }
 
 
