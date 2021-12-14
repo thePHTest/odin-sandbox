@@ -20,6 +20,111 @@ day9_input := string(#load("../aoc/day9.txt"))
 day10_input := string(#load("../aoc/day10.txt"))
 day11_input := string(#load("../aoc/day11.txt"))
 day12_input := string(#load("../aoc/day12.txt"))
+day13_input := string(#load("../aoc/day13.txt"))
+
+Fold :: struct {
+	y_fold : bool,
+	idx : int,
+}
+
+day13 :: proc() {
+	input := day13_input
+	line, ok := strings.split_iterator(&input, "\n")
+
+	grid := make_2d_slice(1311, 1311, int)
+	for ok {
+		line = strings.trim_space(line)
+		if len(line) == 0 {
+			break
+		}
+
+		fproc := proc(r: rune) -> bool {
+			return r == ' ' || r == ',' || r == '\n'
+		}
+		dot := strings.fields_proc(line, fproc)
+		x := strconv.atoi(dot[0])
+		y := strconv.atoi(dot[1])
+		grid[y][x] = 1
+		log.info(dot)
+
+		line, ok = strings.split_iterator(&input, "\n")
+	}
+
+	line, ok = strings.split_iterator(&input, "\n")
+	folds := make([dynamic]Fold)
+	for ok {
+		line = strings.trim_space(line)
+		fproc := proc(r: rune) -> bool {
+			return r == ' ' || r == '=' || r == '\n'
+		}
+		fields := strings.fields_proc(line, fproc)
+		y_fold := fields[2] == "y"
+		val := strconv.atoi(fields[3])
+		fold := Fold{y_fold, val}
+		append(&folds, fold)
+		line, ok = strings.split_iterator(&input, "\n")
+	}
+	log.info(folds)
+
+	for fold, idx in folds {
+		if fold.y_fold {
+			new_grid := make_2d_sub_slice(fold.idx, len(grid[0]), grid)
+			log.info("num rows:", len(new_grid))
+			other_half := make_2d_sub_slice(fold.idx+1, 0, fold.idx, len(grid[0]), grid)
+			log.info("num rows:", len(other_half))
+			half_diff := len(grid) / 2
+			log.info(half_diff)
+			for i in 0..<fold.idx {
+				for j in 0..<len(grid[0]) {
+					/*new_grid[i][j] |= grid[len(grid) - i - 1][j]*/
+					new_grid[i][j] |= other_half[len(other_half) - i - 1][j]
+				}
+			}
+
+			if idx == 0 {
+				dot_count := 0
+				for row in new_grid {
+					for val in row {
+						dot_count += int(val)
+					}
+				}
+				log.info("Part 1 dot count after first fold:", dot_count)
+			}
+			grid = new_grid
+		} else if !fold.y_fold {
+			new_grid := make_2d_sub_slice(len(grid), fold.idx, grid)
+			log.info("num cols:", len(new_grid[0]))
+			other_half := make_2d_sub_slice(0, fold.idx+1, len(grid), fold.idx, grid)
+			log.info("num cols:", len(other_half[0]))
+			for i in 0..<len(new_grid) {
+				for j in 0..<fold.idx {
+					/*new_grid[i][j] |= grid[len(grid) - i - 1][j]*/
+					new_grid[i][j] |= other_half[i][len(other_half[0]) - 1 - j]
+				}
+			}
+
+			if idx == 0 {
+				dot_count := 0
+				for row in new_grid {
+					for val in row {
+						dot_count += int(val)
+					}
+				}
+				log.info("Part 1 dot count after first fold:", dot_count)
+			}
+			grid = new_grid
+		}
+
+		for row in grid {
+			vals := make([]string, len(row))
+			for v, vi in row {
+				pr := "X" if v == 1 else "O"
+				vals[vi] = pr
+			}
+			log.info(vals)
+		}
+	}
+}
 
 day12_part2 :: proc() {
 	input := day12_input
@@ -195,15 +300,15 @@ make_2d_sub_slice :: proc {
 }
 
 make_2d_sub_slice_from_begin :: proc(height, width: int, backing: [][]$T, allocator := context.allocator) -> (res: [][]T) {
-	return sub_slice_2d_from_coord(0, 0, height, width, backing, allocator)
+	return make_2d_sub_slice_from_coord(0, 0, height, width, backing, allocator)
 }
 
 make_2d_sub_slice_from_coord :: proc(y, x, height, width: int, backing: [][]$T, allocator := context.allocator) -> (res: [][]T) {
 	assert (x >= 0 && y >= 0 && width > 0 && height > 0)
 	assert(y < len(backing))
 	assert(x < len(backing[0]))
-	assert(y+height < len(backing))
-	assert(x+width < len(backing[0]))
+	assert(y+height <= len(backing))
+	assert(x+width <= len(backing[0]))
 	context.allocator = allocator
 
 	res = make([][]T, height)
@@ -1294,6 +1399,7 @@ main :: proc() {
 	/*day10()*/
 	/*day11()*/
 	/*test_slicing()*/
-	day12_part1()
-	day12_part2()
+	/*day12_part1()*/
+	/*day12_part2()*/
+	day13()
 }
