@@ -21,6 +21,133 @@ day10_input := string(#load("../aoc/day10.txt"))
 day11_input := string(#load("../aoc/day11.txt"))
 day12_input := string(#load("../aoc/day12.txt"))
 day13_input := string(#load("../aoc/day13.txt"))
+day14_input := string(#load("../aoc/day14.txt"))
+
+day14_part2 :: proc() {
+	input := day14_input
+	line, ok := strings.split_iterator(&input, "\n")
+
+	template := strings.trim_space(line)
+	_ = template
+
+	line, ok = strings.split_iterator(&input, "\n")
+	pair_rules : map[string]rune
+	defer delete(pair_rules)
+	for ok {
+		fields := strings.fields(line)
+		pair_rules[fields[0]] = rune(fields[2][0])
+		line, ok = strings.split_iterator(&input, "\n")
+	}
+
+	pair_counts : map[string]int
+	pairs := len(template) - 1
+	for i in 0..<pairs {
+		pair := template[i:i+2]
+		insert, rule_ok := pair_rules[pair]
+		if rule_ok {
+			pair_counts[pair] += 1
+		} else {
+			log.infof("Pair {} isn't a rule", pair)
+		}
+	}
+	log.info("Initial rules:", pair_rules)
+	log.info("Initial pair counts:", pair_counts)
+
+	log.info(pair_counts)
+	for iter in 0..<40 {
+		pair_counts_swap : map[string]int
+		for pk in pair_counts {
+			pair_counts_swap[pk] = 0
+		}
+		for pk, pv in pair_rules {
+			count := pair_counts[pk]
+			first_pair : strings.Builder
+			second_pair : strings.Builder 
+			strings.init_builder(&first_pair)
+			strings.init_builder(&second_pair)
+			strings.write_string(&first_pair, pk[0:1])
+			strings.write_string(&first_pair, utf8.runes_to_string({pv}))
+			strings.write_string(&second_pair, utf8.runes_to_string({pv}))
+			strings.write_string(&second_pair, pk[1:2])
+			pair_counts_swap[strings.to_string(first_pair)] += count
+			pair_counts_swap[strings.to_string(second_pair)] += count
+			log.info(pair_counts_swap)
+		}
+		temp := pair_counts
+		pair_counts = pair_counts_swap
+		delete(temp)
+	}
+	log.info(pair_counts)
+
+	freqs : map[u8]int
+	for pk, pv in pair_counts {
+		freqs[pk[0]] += pv
+		freqs[pk[1]] += pv
+	}
+
+	map_vals := slice.map_values(freqs)
+	defer delete(map_vals)
+	slice.sort(map_vals)
+	most := map_vals[len(map_vals)-1]
+	least := map_vals[0]
+	log.info(map_vals)
+	log.info(freqs)
+	log.infof("40 iters (most freq count) - (least freq count) = {}", (most - least)/2)
+	delete(pair_counts)
+}
+
+day14_part1 :: proc() {
+	input := day14_input
+	line, ok := strings.split_iterator(&input, "\n")
+
+	template := strings.trim_space(line)
+	_ = template
+
+	line, ok = strings.split_iterator(&input, "\n")
+	pair_rules : map[string]string
+	for ok {
+		fields := strings.fields(line)
+		pair_rules[fields[0]] = fields[2] 
+		line, ok = strings.split_iterator(&input, "\n")
+	}
+	log.info(pair_rules)
+
+	for iter in 0..<10 {
+		_ = iter
+		pairs := len(template) - 1
+		builder : strings.Builder
+		strings.init_builder(&builder)
+		strings.write_string(&builder, template[0:1])
+		defer strings.destroy_builder(&builder)
+		for i in 0..<pairs {
+			pair := template[i:i+2]
+			insert, rule_ok := pair_rules[pair]
+			if rule_ok {
+				strings.write_string(&builder, insert)
+
+			}
+			strings.write_string(&builder, pair[1:2])
+		}
+		temp := template
+		template = strings.clone(strings.to_string(builder))
+	}
+
+	freqs : map[rune]int
+
+	for r in template {
+		freqs[r] += 1
+	}
+
+	map_vals := slice.map_values(freqs)
+	defer delete(map_vals)
+	slice.sort(map_vals)
+	most := map_vals[len(map_vals)-1]
+	least := map_vals[0]
+	log.info(map_vals)
+	log.info(freqs)
+	log.infof("Part 1. 10 iters (most freq count) - (least freq count) -> {} - {} = {}", most, least, most - least)
+
+}
 
 Fold :: struct {
 	y_fold : bool,
@@ -1396,5 +1523,7 @@ main :: proc() {
 	/*test_slicing()*/
 	/*day12_part1()*/
 	/*day12_part2()*/
-	day13()
+	/*day13()*/
+	/*day14_part1()*/
+	day14_part2()
 }
