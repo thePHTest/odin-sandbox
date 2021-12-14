@@ -70,7 +70,6 @@ day13 :: proc() {
 			other_half := make_2d_sub_slice(fold.idx+1, 0, fold.idx, len(grid[0]), grid)
 			for i in 0..<fold.idx {
 				for j in 0..<len(grid[0]) {
-					/*new_grid[i][j] |= grid[len(grid) - i - 1][j]*/
 					new_grid[i][j] |= other_half[len(other_half) - i - 1][j]
 				}
 			}
@@ -90,7 +89,6 @@ day13 :: proc() {
 			other_half := make_2d_sub_slice(0, fold.idx+1, len(grid), fold.idx, grid)
 			for i in 0..<len(new_grid) {
 				for j in 0..<fold.idx {
-					/*new_grid[i][j] |= grid[len(grid) - i - 1][j]*/
 					new_grid[i][j] |= other_half[i][len(other_half[0]) - 1 - j]
 				}
 			}
@@ -106,7 +104,6 @@ day13 :: proc() {
 			}
 			grid = new_grid
 		}
-
 	}
 
 	for row in grid {
