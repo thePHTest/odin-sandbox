@@ -50,7 +50,6 @@ day14_part2 :: proc() {
 	log.info("Initial rules:", pair_rules)
 	log.info("Initial pair counts:", pair_counts)
 
-	log.info(pair_counts)
 	for iter in 0..<40 {
 		pair_counts_swap : map[string]int
 		for pk in pair_counts {
@@ -68,13 +67,11 @@ day14_part2 :: proc() {
 			strings.write_string(&second_pair, pk[1:2])
 			pair_counts_swap[strings.to_string(first_pair)] += count
 			pair_counts_swap[strings.to_string(second_pair)] += count
-			log.info(pair_counts_swap)
 		}
 		temp := pair_counts
 		pair_counts = pair_counts_swap
 		delete(temp)
 	}
-	log.info(pair_counts)
 
 	freqs : map[u8]int
 	for pk, pv in pair_counts {
@@ -87,8 +84,6 @@ day14_part2 :: proc() {
 	slice.sort(map_vals)
 	most := map_vals[len(map_vals)-1]
 	least := map_vals[0]
-	log.info(map_vals)
-	log.info(freqs)
 	log.infof("40 iters (most freq count) - (least freq count) = {}", (most - least)/2)
 	delete(pair_counts)
 }
