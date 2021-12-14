@@ -31,7 +31,8 @@ day13 :: proc() {
 	input := day13_input
 	line, ok := strings.split_iterator(&input, "\n")
 
-	grid := make_2d_slice(1311, 1311, int)
+	backing := make_2d_slice(1311, 1311, int)
+	defer delete_2d_slice(backing)
 	for ok {
 		line = strings.trim_space(line)
 		if len(line) == 0 {
@@ -44,7 +45,7 @@ day13 :: proc() {
 		dot := strings.fields_proc(line, fproc)
 		x := strconv.atoi(dot[0])
 		y := strconv.atoi(dot[1])
-		grid[y][x] = 1
+		backing[y][x] = 1
 
 		line, ok = strings.split_iterator(&input, "\n")
 	}
@@ -64,6 +65,7 @@ day13 :: proc() {
 		line, ok = strings.split_iterator(&input, "\n")
 	}
 
+	grid := make_2d_sub_slice(len(backing), len(backing[0]), backing)
 	for fold, idx in folds {
 		if fold.y_fold {
 			new_grid := make_2d_sub_slice(fold.idx, len(grid[0]), grid)
@@ -102,7 +104,9 @@ day13 :: proc() {
 				}
 				log.info("Part 1 dot count after first fold:", dot_count)
 			}
+			temp := grid
 			grid = new_grid
+			delete_2d_sub_slice(temp)
 		}
 	}
 
