@@ -45,7 +45,6 @@ day13 :: proc() {
 		x := strconv.atoi(dot[0])
 		y := strconv.atoi(dot[1])
 		grid[y][x] = 1
-		log.info(dot)
 
 		line, ok = strings.split_iterator(&input, "\n")
 	}
@@ -64,16 +63,11 @@ day13 :: proc() {
 		append(&folds, fold)
 		line, ok = strings.split_iterator(&input, "\n")
 	}
-	log.info(folds)
 
 	for fold, idx in folds {
 		if fold.y_fold {
 			new_grid := make_2d_sub_slice(fold.idx, len(grid[0]), grid)
-			log.info("num rows:", len(new_grid))
 			other_half := make_2d_sub_slice(fold.idx+1, 0, fold.idx, len(grid[0]), grid)
-			log.info("num rows:", len(other_half))
-			half_diff := len(grid) / 2
-			log.info(half_diff)
 			for i in 0..<fold.idx {
 				for j in 0..<len(grid[0]) {
 					/*new_grid[i][j] |= grid[len(grid) - i - 1][j]*/
@@ -93,9 +87,7 @@ day13 :: proc() {
 			grid = new_grid
 		} else if !fold.y_fold {
 			new_grid := make_2d_sub_slice(len(grid), fold.idx, grid)
-			log.info("num cols:", len(new_grid[0]))
 			other_half := make_2d_sub_slice(0, fold.idx+1, len(grid), fold.idx, grid)
-			log.info("num cols:", len(other_half[0]))
 			for i in 0..<len(new_grid) {
 				for j in 0..<fold.idx {
 					/*new_grid[i][j] |= grid[len(grid) - i - 1][j]*/
@@ -115,14 +107,16 @@ day13 :: proc() {
 			grid = new_grid
 		}
 
-		for row in grid {
-			vals := make([]string, len(row))
-			for v, vi in row {
-				pr := "X" if v == 1 else "O"
-				vals[vi] = pr
-			}
-			log.info(vals)
+	}
+
+	for row in grid {
+		vals := make([]string, len(row))
+		defer delete(vals)
+		for v, vi in row {
+			pr := "X" if v == 1 else "O"
+			vals[vi] = pr
 		}
+		log.info(vals)
 	}
 }
 
