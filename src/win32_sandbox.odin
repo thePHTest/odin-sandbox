@@ -2,6 +2,7 @@ package main
 
 import "core:log"
 import "core:math"
+import "core:unicode"
 import "core:unicode/utf8"
 import "core:slice"
 import "core:strings"
@@ -18,6 +19,237 @@ day8_input := string(#load("../aoc/day8.txt"))
 day9_input := string(#load("../aoc/day9.txt"))
 day10_input := string(#load("../aoc/day10.txt"))
 day11_input := string(#load("../aoc/day11.txt"))
+day12_input := string(#load("../aoc/day12.txt"))
+
+day12_part2 :: proc() {
+	input := day12_input
+	line, ok := strings.split_iterator(&input, "\n")
+
+	system := make(map[string][dynamic]string)
+	defer delete(system)
+	for ok {
+		line = strings.trim_space(line)
+
+		fproc := proc(r: rune) -> bool {
+			return r == ' ' || r == '-' || r == '\n'
+		}
+		caves := strings.fields_proc(line, fproc)
+		log.info(caves)
+
+		cave1_ok := caves[0] in system
+		if !cave1_ok {
+			system[caves[0]] = make([dynamic]string)
+		}
+		append(&system[caves[0]], caves[1])
+
+		cave2_ok := caves[1] in system
+		if !cave2_ok {
+			system[caves[1]] = make([dynamic]string)
+		}
+		append(&system[caves[1]], caves[0])
+
+
+		line, ok = strings.split_iterator(&input, "\n")
+	}
+
+	log.info(system)
+
+	start := system["start"]
+
+	paths := make([dynamic][dynamic]string) 
+	double_visited := make([dynamic]bool)
+	for cave in start {
+		path := make([dynamic]string)
+		append(&path, "start")
+		append(&path, cave)
+		append(&paths, path)
+		append(&double_visited, false)
+	}
+
+	final_paths := make([dynamic][dynamic]string)
+	for len(paths) > 0 {
+		new_paths := make([dynamic][dynamic]string)
+		new_double_visited := make([dynamic]bool)
+		for path, idx in paths {
+			choices := system[path[len(path)-1]]
+
+			for choice in choices {
+				if choice == "start" {
+					continue
+				}
+				contains_choice := false
+				if unicode.is_lower(rune(choice[0])) {
+					contains_choice = slice.contains(path[:], choice)
+					if contains_choice && double_visited[idx] {
+						continue
+					}
+				}
+
+				path_copy := make([dynamic]string)
+				for val in path {
+					append(&path_copy, val)
+				}
+				append(&path_copy, choice)
+				if choice == "end" {
+					append(&final_paths, path_copy)
+				} else {
+					append(&new_paths, path_copy)
+					append(&new_double_visited, contains_choice || double_visited[idx])
+				}
+			}
+		}
+		/*log.info(new_paths)*/
+		paths, new_paths = new_paths, paths
+		double_visited, new_double_visited = new_double_visited, double_visited
+		delete(new_paths)
+		delete(new_double_visited)
+	}
+	/*log.info(final_paths)*/
+	log.info("Part 2 num of unique paths:", len(final_paths))
+}
+
+day12_part1 :: proc() {
+	input := day12_input
+	line, ok := strings.split_iterator(&input, "\n")
+
+	system := make(map[string][dynamic]string)
+	defer delete(system)
+	for ok {
+		line = strings.trim_space(line)
+
+		fproc := proc(r: rune) -> bool {
+			return r == ' ' || r == '-' || r == '\n'
+		}
+		caves := strings.fields_proc(line, fproc)
+		log.info(caves)
+
+		cave1_ok := caves[0] in system
+		if !cave1_ok {
+			system[caves[0]] = make([dynamic]string)
+		}
+		append(&system[caves[0]], caves[1])
+
+		cave2_ok := caves[1] in system
+		if !cave2_ok {
+			system[caves[1]] = make([dynamic]string)
+		}
+		append(&system[caves[1]], caves[0])
+
+
+		line, ok = strings.split_iterator(&input, "\n")
+	}
+
+	log.info(system)
+
+	start := system["start"]
+
+	paths := make([dynamic][dynamic]string) 
+	for cave in start {
+		path := make([dynamic]string)
+		append(&path, "start")
+		append(&path, cave)
+		append(&paths, path)
+	}
+
+	final_paths := make([dynamic][dynamic]string)
+	for len(paths) > 0 {
+		new_paths := make([dynamic][dynamic]string)
+		for path in paths {
+			choices := system[path[len(path)-1]]
+
+			for choice in choices {
+				if unicode.is_lower(rune(choice[0])) {
+					if slice.contains(path[:], choice) {
+						continue
+					}
+				}
+				path_copy := make([dynamic]string)
+				for val in path {
+					append(&path_copy, val)
+				}
+				append(&path_copy, choice)
+				if choice == "end" {
+					append(&final_paths, path_copy)
+				} else {
+					append(&new_paths, path_copy)
+				}
+			}
+		}
+		/*log.info(new_paths)*/
+		paths, new_paths = new_paths, paths
+		delete(new_paths)
+	}
+	/*log.info(final_paths)*/
+	log.info("Part 1 num of unique paths:", len(final_paths))
+}
+
+
+make_2d_sub_slice :: proc {
+	make_2d_sub_slice_from_begin,
+	make_2d_sub_slice_from_coord,
+}
+
+make_2d_sub_slice_from_begin :: proc(height, width: int, backing: [][]$T, allocator := context.allocator) -> (res: [][]T) {
+	return sub_slice_2d_from_coord(0, 0, height, width, backing, allocator)
+}
+
+make_2d_sub_slice_from_coord :: proc(y, x, height, width: int, backing: [][]$T, allocator := context.allocator) -> (res: [][]T) {
+	assert (x >= 0 && y >= 0 && width > 0 && height > 0)
+	assert(y < len(backing))
+	assert(x < len(backing[0]))
+	assert(y+height < len(backing))
+	assert(x+width < len(backing[0]))
+	context.allocator = allocator
+
+	res = make([][]T, height)
+
+	for i in 0..<height {
+		res[i] = backing[y+i][x:][:width]
+	}
+	return
+}
+
+delete_2d_sub_slice :: proc(slice: [][]$T, allocator := context.allocator) {
+	delete(slice, allocator)
+}
+
+make_2d_slice :: proc(y, x: int, $T: typeid, allocator := context.allocator) -> (res: [][]T) {
+    assert(x > 0 && y > 0)
+    context.allocator = allocator
+
+    backing := make([]T, x * y)
+    res      = make([][]T, y)
+
+    for i in 0..<y {
+        res[i] = backing[x * i:][:x]
+    }
+    return
+}
+
+delete_2d_slice :: proc(slice: [][]$T, allocator := context.allocator) {
+    delete(slice[0], allocator)
+    delete(slice,    allocator)
+}
+
+test_slicing :: proc() {
+    slices := make_2d_slice(8, 7, int)
+
+    for _, y in slices {
+        for _, x in slices[y] {
+            slices[y][x] = y
+        }
+    }
+
+    log.info(slices)
+
+
+	sub_slice := make_2d_sub_slice(1, 2, 6, 4, slices)
+	log.info(sub_slice)
+
+    delete_2d_slice(slices)
+	delete_2d_sub_slice(sub_slice)
+    log.info("Done.")
+}
 
 Octo :: struct {
 	val : int,
@@ -1055,5 +1287,8 @@ main :: proc() {
 	/*day8()*/
 	/*day9()*/
 	/*day10()*/
-	day11()
+	/*day11()*/
+	/*test_slicing()*/
+	day12_part1()
+	day12_part2()
 }
