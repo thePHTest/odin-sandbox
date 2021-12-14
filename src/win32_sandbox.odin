@@ -76,7 +76,7 @@ day14_part2 :: proc() {
 	freqs : map[u8]int
 	for pk, pv in pair_counts {
 		freqs[pk[0]] += pv
-		freqs[pk[1]] += pv
+		/*freqs[pk[1]] += pv*/
 	}
 
 	map_vals := slice.map_values(freqs)
@@ -84,7 +84,7 @@ day14_part2 :: proc() {
 	slice.sort(map_vals)
 	most := map_vals[len(map_vals)-1]
 	least := map_vals[0]
-	log.infof("40 iters (most freq count) - (least freq count) = {}", (most - least)/2)
+	log.infof("40 iters (most freq count) - (least freq count) = {}", most - least - 1)
 	delete(pair_counts)
 }
 
