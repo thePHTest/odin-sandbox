@@ -24,8 +24,154 @@ day13_input := string(#load("../aoc/day13.txt"))
 day14_input := string(#load("../aoc/day14.txt"))
 day15_input := string(#load("../aoc/day15.txt"))
 
-day15 :: proc() {
+day15_part2 :: proc() {
+	input := day15_input
+	lines := strings.split(input, "\n")
+	nrows := len(lines) - 1
+	ncols := len(strings.trim_space(lines[0]))
 
+	og_nrows := nrows
+	og_ncols := ncols
+	nrows *= 5
+	ncols *= 5
+
+	grid := make_2d_slice(nrows, ncols, int)
+	for ridx in 0..<og_nrows {
+		for cidx in 0..<og_ncols  {
+			parsed_val := strconv.atoi(lines[ridx][cidx:cidx+1])
+			for i := 0; i < 5; i += 1 {
+				for j := 0; j < 5; j += 1 {
+					val := ((parsed_val+i+j-1) % 9) + 1
+					if val == 0 {
+						val = 1
+					}
+					grid[ridx + i*og_nrows][cidx + j*og_ncols] = val
+				}
+			}
+		}
+	}
+
+	g_scores : map[[2]int]int
+	for y in 0..<nrows {
+		for x in 0..<ncols {
+			g_scores[{y,x}] = max(int)
+		}
+	}
+	g_scores[{0,0}] = 0
+
+	f_scores : map[[2]int]int
+	f_scores[{0,0}] = nrows + ncols - 2
+
+	nodes : map[[2]int]bool
+	nodes[[2]int{0,0}] = true
+
+	came_from : map[[2]int][2]int
+
+	end := [2]int{nrows-1, ncols-1}
+	for len(nodes) > 0 {
+		min_node : [2]int
+		min_val := max(int)
+		for key, val in nodes {
+			_ = val
+			if key in f_scores && f_scores[key] < min_val {
+				min_node = key
+				min_val = f_scores[key]
+			}
+		}
+
+		if min_node == end {
+			log.info("Found min score of:", f_scores[min_node])
+			break
+		}
+		delete_key(&nodes, min_node)
+		for i := -1; i <= 1; i += 1 {
+			for j := -1; j <=1; j += 1 {
+				if i == 0 && j == 0 do continue
+				if abs(i) + abs(j) > 1 do continue
+				if i + min_node[0] < 0 || i + min_node[0] >= nrows do continue
+				if j + min_node[1] < 0 || j + min_node[1] >= ncols do continue
+
+				neighbor := min_node + [2]int{i,j}
+				tentative_gscore := g_scores[min_node] + grid[neighbor[0]][neighbor[1]]
+				if tentative_gscore < g_scores[neighbor] {
+					came_from[neighbor] = min_node
+					g_scores[neighbor] = tentative_gscore
+					f_scores[neighbor] = tentative_gscore + ncols + nrows - 2 - neighbor[0] - neighbor[1] 
+					if neighbor not_in nodes {
+						nodes[neighbor] = true
+					}
+				}
+			}
+		}
+	}
+}
+
+day15_part1 :: proc() {
+	input := day15_input
+	lines := strings.split(input, "\n")
+	nrows := len(lines) - 1
+	ncols := len(strings.trim_space(lines[0]))
+
+	grid := make_2d_slice(nrows, ncols, int)
+	for row, ridx in &grid {
+		for val, cidx in &row  {
+			val = strconv.atoi(lines[ridx][cidx:cidx+1])
+		}
+	}
+
+	g_scores : map[[2]int]int
+	for y in 0..<nrows {
+		for x in 0..<ncols {
+			g_scores[{y,x}] = max(int)
+		}
+	}
+	g_scores[{0,0}] = 0
+
+	f_scores : map[[2]int]int
+	f_scores[{0,0}] = nrows + ncols - 2
+
+	nodes : map[[2]int]bool
+	nodes[[2]int{0,0}] = true
+
+	came_from : map[[2]int][2]int
+
+	end := [2]int{nrows-1, ncols-1}
+	for len(nodes) > 0 {
+		min_node : [2]int
+		min_val := max(int)
+		for key, val in nodes {
+			_ = val
+			if key in f_scores && f_scores[key] < min_val {
+				min_node = key
+				min_val = f_scores[key]
+			}
+		}
+
+		if min_node == end {
+			log.info("Found min score of:", f_scores[min_node])
+			break
+		}
+		delete_key(&nodes, min_node)
+		for i := -1; i <= 1; i += 1 {
+			for j := -1; j <=1; j += 1 {
+				if i == 0 && j == 0 do continue
+				if abs(i) + abs(j) > 1 do continue
+				if i + min_node[0] < 0 || i + min_node[0] >= nrows do continue
+				if j + min_node[1] < 0 || j + min_node[1] >= ncols do continue
+
+				neighbor := min_node + [2]int{i,j}
+				tentative_gscore := g_scores[min_node] + grid[neighbor[0]][neighbor[1]]
+				if tentative_gscore < g_scores[neighbor] {
+					came_from[neighbor] = min_node
+					g_scores[neighbor] = tentative_gscore
+					f_scores[neighbor] = tentative_gscore + ncols + nrows - 2 - neighbor[0] - neighbor[1] 
+					if neighbor not_in nodes {
+						nodes[neighbor] = true
+					}
+				}
+			}
+		}
+	}
 }
 
 day14_part2 :: proc() {
@@ -1523,5 +1669,6 @@ main :: proc() {
 	/*day13()*/
 	/*day14_part1()*/
 	/*day14_part2()*/
-	day15()
+	day15_part1()
+	day15_part2()
 }
