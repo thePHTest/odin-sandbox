@@ -43,9 +43,6 @@ day15_part2 :: proc() {
 			for i := 0; i < 5; i += 1 {
 				for j := 0; j < 5; j += 1 {
 					val := ((parsed_val+i+j-1) % 9) + 1
-					if val == 0 {
-						val = 1
-					}
 					grid[ridx + i*og_nrows][cidx + j*og_ncols] = val
 				}
 			}
