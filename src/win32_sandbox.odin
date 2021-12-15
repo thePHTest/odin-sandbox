@@ -22,6 +22,11 @@ day11_input := string(#load("../aoc/day11.txt"))
 day12_input := string(#load("../aoc/day12.txt"))
 day13_input := string(#load("../aoc/day13.txt"))
 day14_input := string(#load("../aoc/day14.txt"))
+day15_input := string(#load("../aoc/day15.txt"))
+
+day15 :: proc() {
+
+}
 
 day14_part2 :: proc() {
 	input := day14_input
@@ -107,8 +112,7 @@ day14_part1 :: proc() {
 	for iter in 0..<10 {
 		_ = iter
 		pairs := len(template) - 1
-		builder : strings.Builder
-		strings.init_builder(&builder)
+		builder := strings.make_builder()
 		strings.write_string(&builder, template[0:1])
 		defer strings.destroy_builder(&builder)
 		for i in 0..<pairs {
@@ -122,6 +126,7 @@ day14_part1 :: proc() {
 		}
 		temp := template
 		template = strings.clone(strings.to_string(builder))
+		if iter > 0 do delete(temp)
 	}
 
 	freqs : map[rune]int
@@ -1517,5 +1522,6 @@ main :: proc() {
 	/*day12_part2()*/
 	/*day13()*/
 	/*day14_part1()*/
-	day14_part2()
+	/*day14_part2()*/
+	day15()
 }
