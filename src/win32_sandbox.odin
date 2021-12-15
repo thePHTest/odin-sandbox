@@ -36,6 +36,7 @@ day15_part2 :: proc() {
 	ncols *= 5
 
 	grid := make_2d_slice(nrows, ncols, int)
+	defer delete_2d_slice(grid)
 	for ridx in 0..<og_nrows {
 		for cidx in 0..<og_ncols  {
 			parsed_val := strconv.atoi(lines[ridx][cidx:cidx+1])
@@ -52,6 +53,7 @@ day15_part2 :: proc() {
 	}
 
 	g_scores : map[[2]int]int
+	defer delete(g_scores)
 	for y in 0..<nrows {
 		for x in 0..<ncols {
 			g_scores[{y,x}] = max(int)
@@ -60,12 +62,14 @@ day15_part2 :: proc() {
 	g_scores[{0,0}] = 0
 
 	f_scores : map[[2]int]int
+	defer delete(f_scores)
 	f_scores[{0,0}] = nrows + ncols - 2
 
 	nodes : map[[2]int]bool
+	defer delete(nodes)
 	nodes[[2]int{0,0}] = true
 
-	came_from : map[[2]int][2]int
+	/*came_from : map[[2]int][2]int*/
 
 	end := [2]int{nrows-1, ncols-1}
 	for len(nodes) > 0 {
@@ -94,7 +98,7 @@ day15_part2 :: proc() {
 				neighbor := min_node + [2]int{i,j}
 				tentative_gscore := g_scores[min_node] + grid[neighbor[0]][neighbor[1]]
 				if tentative_gscore < g_scores[neighbor] {
-					came_from[neighbor] = min_node
+					/*came_from[neighbor] = min_node*/
 					g_scores[neighbor] = tentative_gscore
 					f_scores[neighbor] = tentative_gscore + ncols + nrows - 2 - neighbor[0] - neighbor[1] 
 					if neighbor not_in nodes {
@@ -113,6 +117,7 @@ day15_part1 :: proc() {
 	ncols := len(strings.trim_space(lines[0]))
 
 	grid := make_2d_slice(nrows, ncols, int)
+	defer delete_2d_slice(grid)
 	for row, ridx in &grid {
 		for val, cidx in &row  {
 			val = strconv.atoi(lines[ridx][cidx:cidx+1])
@@ -120,6 +125,7 @@ day15_part1 :: proc() {
 	}
 
 	g_scores : map[[2]int]int
+	defer delete(g_scores)
 	for y in 0..<nrows {
 		for x in 0..<ncols {
 			g_scores[{y,x}] = max(int)
@@ -128,12 +134,14 @@ day15_part1 :: proc() {
 	g_scores[{0,0}] = 0
 
 	f_scores : map[[2]int]int
+	defer delete(f_scores)
 	f_scores[{0,0}] = nrows + ncols - 2
 
 	nodes : map[[2]int]bool
+	defer delete(nodes)
 	nodes[[2]int{0,0}] = true
 
-	came_from : map[[2]int][2]int
+	/*came_from : map[[2]int][2]int*/
 
 	end := [2]int{nrows-1, ncols-1}
 	for len(nodes) > 0 {
@@ -162,7 +170,7 @@ day15_part1 :: proc() {
 				neighbor := min_node + [2]int{i,j}
 				tentative_gscore := g_scores[min_node] + grid[neighbor[0]][neighbor[1]]
 				if tentative_gscore < g_scores[neighbor] {
-					came_from[neighbor] = min_node
+					/*came_from[neighbor] = min_node*/
 					g_scores[neighbor] = tentative_gscore
 					f_scores[neighbor] = tentative_gscore + ncols + nrows - 2 - neighbor[0] - neighbor[1] 
 					if neighbor not_in nodes {
