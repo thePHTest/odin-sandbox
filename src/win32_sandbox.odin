@@ -24,6 +24,53 @@ day13_input := string(#load("../aoc/day13.txt"))
 day14_input := string(#load("../aoc/day14.txt"))
 day15_input := string(#load("../aoc/day15.txt"))
 
+day17 :: proc() { 
+	target_min_x := 138
+	target_max_x := 184
+	target_min_y := -125
+	target_max_y := -71
+
+	initial_pos := [2]int{0, 0}
+
+	highest_y_found := min(int)
+	highest_start_vel : [2]int
+	distinct_initial_vels := 0
+	for x_vel := 0; x_vel <= target_max_x; x_vel += 1 {
+		for y_vel := target_min_y; y_vel <= 3000; y_vel += 1 {
+			start_vel := [2]int{x_vel, y_vel}
+
+			highest_y := min(int)
+
+			pos := initial_pos
+			vel := start_vel
+			iter := 0
+			for iter <= 1000 {
+				pos = pos + vel
+				if pos.y >= highest_y {
+					highest_y = pos.y
+				}
+				if pos.y < target_min_y || pos.x > target_max_x {
+					break
+				}
+				if pos.x >= target_min_x && pos.x <= target_max_x &&
+					pos.y >= target_min_y && pos.y <= target_max_y {
+					if highest_y >= highest_y_found {
+						highest_y_found = highest_y
+						highest_start_vel = start_vel
+					}
+					distinct_initial_vels += 1
+					break
+				}
+				if vel.x > 0 do vel.x -= 1
+				if vel.x < 0 do vel.x += 1
+				vel.y -= 1
+			}
+		}
+	}
+	log.info("Part 1 highest Y Found:", highest_y_found)
+	log.info("Part 2 distinct initial vels:", distinct_initial_vels)
+}
+
 day15_part2 :: proc() {
 	input := day15_input
 	lines := strings.split(input, "\n")
@@ -1674,6 +1721,7 @@ main :: proc() {
 	/*day13()*/
 	/*day14_part1()*/
 	/*day14_part2()*/
-	day15_part1()
-	day15_part2()
+	/*day15_part1()*/
+	/*day15_part2()*/
+	day17()
 }
