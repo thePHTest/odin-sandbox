@@ -23,6 +23,8 @@ day12_input := string(#load("../aoc/day12.txt"))
 day13_input := string(#load("../aoc/day13.txt"))
 day14_input := string(#load("../aoc/day14.txt"))
 day15_input := string(#load("../aoc/day15.txt"))
+day16_input := string(#load("../aoc/day16.txt"))
+/*day17_input := string(#load("../aoc/day17.txt"))*/ // Just hardcoded the input for this one. It was minimal
 
 day17 :: proc() { 
 	target_min_x := 138
@@ -69,6 +71,172 @@ day17 :: proc() {
 	}
 	log.info("Part 1 highest Y Found:", highest_y_found)
 	log.info("Part 2 distinct initial vels:", distinct_initial_vels)
+}
+
+sum_bits :: proc(bits : []u8) -> uint {
+	res : uint = 0
+	for b, idx in bits {
+		add : uint = uint(b)
+		for i in (idx+1)..<len(bits) {
+			_ = i
+			add = add << 1
+		}
+		res += add
+	}
+	return res
+}
+
+day16_version_sum := 0
+consume_packet :: proc(bits: []u8) -> ([]u8, int, int) {
+	curr := bits
+	header_version_slice := curr[0:3]
+	header_type_slice := curr[3:6]
+
+	header_version := sum_bits(header_version_slice)
+	header_type := sum_bits(header_type_slice)
+	log.info(header_version)
+	log.info(header_type)
+	day16_version_sum += int(header_version)
+
+	value := 0
+	packet_vals := make([dynamic]int)
+
+	if header_type == 4 {
+		curr = curr[6:]
+
+		packet_bits := make([dynamic]u8)
+		for true {
+			five := curr[0:5]
+			curr = curr[5:]
+			for b in five[1:] {
+				append(&packet_bits, b)
+			}
+			if five[0] == 0 {
+				break
+			}
+		}
+		value = int(sum_bits(packet_bits[:]))
+		log.info("Literal:", value)
+	}
+	else {
+		curr = curr[6:]
+		length_type := curr[0]
+		curr = curr[1:]
+
+		if length_type == 0 {
+			num_bits_in_sub_packets_slice := curr[0:15]
+			num_bits_in_sub_packets := sum_bits(num_bits_in_sub_packets_slice)
+			log.info("Num bits in sub packets:", num_bits_in_sub_packets)
+			curr = curr[15:]
+			num_bits_consumed := 0
+			for num_bits_consumed < int(num_bits_in_sub_packets) {
+				new, n_consumed, val := consume_packet(curr)
+				append(&packet_vals, val)
+				num_bits_consumed += n_consumed
+				curr = new
+			}
+			log.info("Num bits consumed vs num bits in sub packets", num_bits_consumed, num_bits_in_sub_packets)
+		} else {
+			num_sub_packets_slice := curr[0:11]
+			num_sub_packets := sum_bits(num_sub_packets_slice)
+			log.info("Num sub packets:", num_sub_packets)
+			curr = curr[11:]
+			n_consumed : int
+			for i in  0..<num_sub_packets {
+				_ = i
+				val : int
+				curr, n_consumed, val = consume_packet(curr)
+				append(&packet_vals, val)
+			}
+		}
+	}
+
+	if header_type == 0 {
+		for v in packet_vals {
+			value += v
+		}
+	} else if header_type == 1 {
+		value = 1
+		for v in packet_vals {
+			value *= v
+		}
+	} else if header_type == 2 {
+		min_val := max(int)
+		for v in packet_vals {
+			min_val = min(v, min_val)
+		}
+		value = min_val
+	} else if header_type == 3 {
+		max_val := min(int)
+		for v in packet_vals {
+			max_val = max(v, max_val)
+		}
+		value = max_val
+	} else if header_type == 5 {
+		value = 1 if packet_vals[0] > packet_vals[1] else 0
+	} else if header_type == 6 {
+		value = 1 if packet_vals[0] < packet_vals[1] else 0
+	} else if header_type == 7 {
+		value = 1 if packet_vals[0] == packet_vals[1] else 0
+	}
+
+	log.info("Curr version sum:", day16_version_sum)
+	return curr, (len(bits) - len(curr)), value
+}
+
+all_zero :: proc(buf : []u8) -> bool {
+	for b in buf {
+		if b != 0 do return false
+	}
+	return true
+}
+
+day16 :: proc() {
+	input := strings.trim_space(day16_input)
+	num_bits := 4*len(input)
+	log.info("Num bits:", num_bits)
+
+	bits := make([]u8, num_bits)
+	hex_to_int :: proc(c: byte) -> u8 {
+		switch c {
+		case '0'..='9': return u8(c-'0')
+		case 'a'..='f': return u8(c-'a')+10
+		case 'A'..='F': return u8(c-'A')+10
+		}
+		return 0
+	}
+
+	for r, idx in input {
+		v := hex_to_int(u8(r))
+		_ = v
+		/*strconv.append_bits(bits[:], u64(v), 2, false, 8, strconv.digits, nil)*/
+		bits[idx*4 + 3] = u8(v % 2)
+		v = v >> 1
+		bits[idx*4 + 2] = u8(v % 2)
+		v = v >> 1
+		bits[idx*4 + 1] = u8(v % 2)
+		v = v >> 1
+		bits[idx*4] = u8(v % 2)
+		v = v >> 1
+	}
+	/*log.info(bits)*/
+
+
+	total_bits_consumed := 0
+	value : int
+	for len(bits) > 6 {
+		log.info("BITS", bits)
+		bits_consumed : int
+		bits, bits_consumed, value = consume_packet(bits)
+		total_bits_consumed += bits_consumed
+		log.info("outer value:", value)
+
+		
+		if all_zero(bits) {
+			break
+		}
+	}
+	log.info("Total value:", value)
 }
 
 day15_part2 :: proc() {
@@ -1723,5 +1891,6 @@ main :: proc() {
 	/*day14_part2()*/
 	/*day15_part1()*/
 	/*day15_part2()*/
-	day17()
+	day16()
+	/*day17()*/
 }
