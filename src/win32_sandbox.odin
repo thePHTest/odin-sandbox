@@ -25,6 +25,57 @@ day14_input := string(#load("../aoc/day14.txt"))
 day15_input := string(#load("../aoc/day15.txt"))
 day16_input := string(#load("../aoc/day16.txt"))
 /*day17_input := string(#load("../aoc/day17.txt"))*/ // Just hardcoded the input for this one. It was minimal
+day18_input := string(#load("../aoc/day18.txt"))
+
+Pair :: struct {
+	left : ^Pair,
+	right : ^Pair,
+	parent : ^Pair,
+	left_val : int,
+	right_val : int,
+}
+
+parse_pair :: proc(input : string) -> Pair { 
+	out : Pair
+	/*left := new(Pair)*/
+	/*right := new(Pair)*/
+
+	left_side : string
+	right_side : string
+	log.info(input)
+	for r,idx in input {
+		if r == '[' {
+			left_side = input[:idx] 
+			log.info("Left:", left_side, idx)
+			break
+		}
+	}
+
+	for idx in 0..<len(input) {
+		ridx := len(input) - idx - 1
+		if input[ridx] == ']' {
+			right_side = input[ridx+1:][:idx]
+			log.info("Right:", right_side, idx)
+			break
+		}
+	}
+
+	return out
+}
+
+day18 :: proc() {
+	input := day18_input
+
+	line, ok := strings.split_iterator(&input, "\n")
+	root : Pair
+	for ok {
+		line = strings.trim_space(line)
+		log.info(line)
+
+		root = parse_pair(line[1:len(line)-1])
+		line, ok = strings.split_iterator(&input, "\n")
+	}
+}
 
 day17 :: proc() { 
 	target_min_x := 138
@@ -230,7 +281,6 @@ day16 :: proc() {
 		bits, bits_consumed, value = consume_packet(bits)
 		total_bits_consumed += bits_consumed
 		log.info("outer value:", value)
-
 		
 		if all_zero(bits) {
 			break
@@ -1891,6 +1941,7 @@ main :: proc() {
 	/*day14_part2()*/
 	/*day15_part1()*/
 	/*day15_part2()*/
-	day16()
+	/*day16()*/
 	/*day17()*/
+	day18()
 }
