@@ -62,63 +62,112 @@ print_tree :: proc(using node : ^Node, level : int) {
 	}
 }
 
-reduce :: proc(node : ^Node, level : int) -> bool {
+explode :: proc(node : ^Node, level : int) -> bool {
 	using node
 	if leaf {
 		return false
 	} else {
-		if level + 1 == 4 {
-			log.info("Exploding:", node)
-			log.info("Search left")
-			parent_left_leaf := parent.left
-			
-			for parent_left_leaf != nil && !parent_left_leaf.leaf {
-				if parent_left_leaf.is_left && parent_left_leaf.parent != nil {
-					parent_left_leaf = parent_left_leaf.parent.parent
-				} else {
-					parent_left_leaf = parent_left_leaf.parent.left
-				}
+		if level == 4 {
+			/*log.info("Exploding:", node)*/
+			/*log.info("Search left")*/
+			parent_left_leaf := left
+			for parent_left_leaf != nil && parent_left_leaf.is_left {
+				parent_left_leaf = parent_left_leaf.parent
 			}
-			if parent_left_leaf != nil && parent_left_leaf.leaf {
-				log.infof("Adding exploded left val of {} to {}", left.val, parent_left_leaf.val)
-				parent_left_leaf.val += left.val
+			if parent_left_leaf != nil {
+				parent_left_leaf = parent_left_leaf.parent
+				if parent_left_leaf != nil {
+					parent_left_leaf = parent_left_leaf.left
+				}
 			}
 
-			log.info("Search right")
-			parent_right_leaf := parent.right
-			for parent_right_leaf != nil && !parent_right_leaf.leaf {
-				fmt.println("")
-				fmt.println("iter")
-				print_tree(parent_right_leaf, level)
-				if parent_right_leaf.is_right && parent_right_leaf.parent != nil {
-					parent_right_leaf = parent_right_leaf.parent.parent
-				} else {
-					parent_right_leaf = parent_right_leaf.parent.right
+			for parent_left_leaf != nil && !parent_left_leaf.leaf {
+				/*fmt.println("")*/
+				/*fmt.println("iter")*/
+				/*print_tree(parent_left_leaf, level)*/
+				parent_left_leaf = parent_left_leaf.right
+			}
+			if parent_left_leaf != nil && parent_left_leaf.leaf {
+				/*log.infof("Adding exploded left val of {} to {}", left.val, parent_left_leaf.val)*/
+				parent_left_leaf.val += left.val
+			} else {
+				/*log.infof("Found nothing to the left")*/
+			}
+
+			/*log.info("Search right")*/
+			parent_right_leaf := right
+			for parent_right_leaf != nil && parent_right_leaf.is_right {
+				parent_right_leaf = parent_right_leaf.parent
+			}
+			if parent_right_leaf != nil {
+				parent_right_leaf = parent_right_leaf.parent
+				if parent_right_leaf != nil {
+					parent_right_leaf = parent_right_leaf.right
 				}
 			}
+
+
+			for parent_right_leaf != nil && !parent_right_leaf.leaf {
+				/*fmt.println("")*/
+				/*fmt.println("iter")*/
+				/*print_tree(parent_right_leaf, level)*/
+				parent_right_leaf = parent_right_leaf.left
+			}
 			if parent_right_leaf != nil && parent_right_leaf.leaf {
-				log.infof("Adding exploded right val of {} to {}", right.val, parent_right_leaf.val)
+				/*log.infof("Adding exploded right val of {} to {}", right.val, parent_right_leaf.val)*/
 				parent_right_leaf.val += right.val
+			} else {
+				/*log.infof("Found nothing to the right")*/
 			}
 			
 			left = nil
 			right = nil
 			val = 0
 			leaf = true
-			log.info("Explode finished")
+			/*log.info("Explode finished")*/
+			/*log.info("Exploded node result:", node)*/
 			return true
 		}
-		left_reduced := reduce(left, level+1)
-		if left_reduced do return true
-		right_reduced := reduce(right, level+1)
-		return right_reduced
+
+		left_exploded := explode(left, level+1)
+		if left_exploded do return true
+		right_exploded := explode(right, level+1)
+		return right_exploded
 	}
+}
+
+split :: proc(using node : ^Node, level : int) -> bool {
+	if leaf && val >= 10 {
+		/*log.info("Splitting node:", node)*/
+		leaf = false
+		new_left := new(Node)
+		new_right := new(Node)
+		new_left.is_left = true
+		new_left.leaf = true
+		new_left.parent = node
+		new_right.is_right = true
+		new_right.leaf = true
+		new_right.parent = node
+		new_left.val = val / 2
+		new_right.val = int(math.ceil(f32(val) / f32(2)))
+		left = new_left
+		right = new_right
+		return true
+	} else if leaf {
+		return false
+	}
+
+	left_split := split(left, level+1)
+	if left_split do return true
+	right_split := split(right, level+1)
+	if right_split do return true
+	return false
 }
 
 parse_tree :: proc(input : string, node : ^Node) { 
 	curr := node
 	for r,idx in input {
-		log.info(r)
+		/*log.info(r)*/
 		switch r {
 			case '[':
 			curr.left = new(Node)
@@ -140,21 +189,116 @@ parse_tree :: proc(input : string, node : ^Node) {
 	}
 }
 
-day18 :: proc() {
+add_nodes :: proc(a : ^Node, b : ^Node) -> ^Node {
+	res := new(Node)
+	res.left = a
+	res.right = b
+	a.parent = res
+	b.parent = res
+	a.is_left = true
+	b.is_right = true
+	return res
+}
+
+magnitude :: proc(using node : ^Node) -> int {
+	if leaf {
+		return val
+	}
+	left_val := magnitude(left)
+	right_val := magnitude(right)
+	return 3*left_val + 2*right_val
+}
+
+deep_copy :: proc(using node: ^Node, par : ^Node) -> ^Node {
+	if node == nil {
+		return nil
+	}
+	cp := new(Node)
+	cp.left = deep_copy(left, cp)
+	cp.right = deep_copy(right, cp)
+	cp.leaf = leaf
+	cp.val = val
+	cp.is_right = is_right
+	cp.is_left = is_left
+	cp.parent = par
+	return cp
+}
+
+day18_part2 :: proc() {
 	input := day18_input
 
 	line, ok := strings.split_iterator(&input, "\n")
-	root : Node
-	/*for ok {*/
+	trees := make([dynamic]^Node)
+	for ok {
+		new_node := new(Node)
 		line = strings.trim_space(line)
-		log.info(line)
 
-		parse_tree(line[0:len(line)], &root)
-		print_tree(&root, 0)
+		parse_tree(line, new_node)
+		append(&trees, new_node)
+
+		
+
 		line, ok = strings.split_iterator(&input, "\n")
-	/*}*/
-	reduce(&root, 0)
-	print_tree(&root, 0)
+	}
+
+	max_mag := min(int)
+	for i in 0..<len(trees) {
+		for j in 0..<len(trees) {
+			if i == j do continue
+			left_tree := deep_copy(trees[i], nil)
+			right_tree := deep_copy(trees[j], nil)
+
+			curr := add_nodes(left_tree, right_tree)
+			altered := true
+			for altered {
+				for explode(curr, 0) {
+				}
+
+				altered = split(curr, 0)
+			}
+
+			new_mag := magnitude(curr)
+			max_mag = max(new_mag, max_mag)
+		}
+	}
+
+	log.info("Part 2 largest magnitude:", max_mag)
+}
+
+day18_part1 :: proc() {
+	input := day18_input
+
+	line, ok := strings.split_iterator(&input, "\n")
+	line = strings.trim_space(line)
+	prev := new(Node)
+	parse_tree(line, prev)
+
+	line, ok = strings.split_iterator(&input, "\n")
+	for ok {
+		new_node := new(Node)
+		line = strings.trim_space(line)
+
+		parse_tree(line, new_node)
+
+		prev = add_nodes(prev, new_node) 
+
+		altered := true
+		for altered {
+			for explode(prev, 0) {
+				/*fmt.println("Reduce result:")*/
+				/*print_tree(&root, 0)*/
+			}
+
+			altered = split(prev, 0)
+		}
+
+		line, ok = strings.split_iterator(&input, "\n")
+	}
+	
+	/*log.info("Done reducing")*/
+	/*print_tree(prev, 0)*/
+
+	log.info("Part 1 Magnitude:", magnitude(prev))
 }
 
 day17 :: proc() { 
@@ -2023,5 +2167,6 @@ main :: proc() {
 	/*day15_part2()*/
 	/*day16()*/
 	/*day17()*/
-	day18()
+	/*day18_part1()*/
+	day18_part2()
 }
