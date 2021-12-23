@@ -1,5 +1,6 @@
 package main
 
+import "core:fmt"
 import "core:log"
 import "core:math"
 import "core:unicode"
@@ -27,54 +28,133 @@ day16_input := string(#load("../aoc/day16.txt"))
 /*day17_input := string(#load("../aoc/day17.txt"))*/ // Just hardcoded the input for this one. It was minimal
 day18_input := string(#load("../aoc/day18.txt"))
 
-Pair :: struct {
-	left : ^Pair,
-	right : ^Pair,
-	parent : ^Pair,
-	left_val : int,
-	right_val : int,
+Node :: struct {
+	left : ^Node,
+	right : ^Node,
+	parent : ^Node,
+	is_left : bool,
+	is_right : bool,
+	leaf : bool,
+	val : int,
 }
 
-parse_pair :: proc(input : string) -> Pair { 
-	out : Pair
-	/*left := new(Pair)*/
-	/*right := new(Pair)*/
+print_tree :: proc(using node : ^Node, level : int) {
+	fmt.println()
+	for i in 0..<level {
+		_ = i
+		fmt.print(".")
+	}
+	if leaf {
+		fmt.print(val)
+	} else {
+		fmt.print(".")
+		fmt.print("[")
+		print_tree(left, level + 1)
+		fmt.print(",")
+		print_tree(right, level + 1)
+		fmt.println()
+		for i in 0..<level {
+			_ = i
+			fmt.print(".")
+		}
+		fmt.print(".")
+		fmt.print("]")
+	}
+}
 
-	left_side : string
-	right_side : string
-	log.info(input)
+reduce :: proc(node : ^Node, level : int) -> bool {
+	using node
+	if leaf {
+		return false
+	} else {
+		if level + 1 == 4 {
+			log.info("Exploding:", node)
+			log.info("Search left")
+			parent_left_leaf := parent.left
+			
+			for parent_left_leaf != nil && !parent_left_leaf.leaf {
+				if parent_left_leaf.is_left && parent_left_leaf.parent != nil {
+					parent_left_leaf = parent_left_leaf.parent.parent
+				} else {
+					parent_left_leaf = parent_left_leaf.parent.left
+				}
+			}
+			if parent_left_leaf != nil && parent_left_leaf.leaf {
+				log.infof("Adding exploded left val of {} to {}", left.val, parent_left_leaf.val)
+				parent_left_leaf.val += left.val
+			}
+
+			log.info("Search right")
+			parent_right_leaf := parent.right
+			for parent_right_leaf != nil && !parent_right_leaf.leaf {
+				fmt.println("")
+				fmt.println("iter")
+				print_tree(parent_right_leaf, level)
+				if parent_right_leaf.is_right && parent_right_leaf.parent != nil {
+					parent_right_leaf = parent_right_leaf.parent.parent
+				} else {
+					parent_right_leaf = parent_right_leaf.parent.right
+				}
+			}
+			if parent_right_leaf != nil && parent_right_leaf.leaf {
+				log.infof("Adding exploded right val of {} to {}", right.val, parent_right_leaf.val)
+				parent_right_leaf.val += right.val
+			}
+			
+			left = nil
+			right = nil
+			val = 0
+			leaf = true
+			log.info("Explode finished")
+			return true
+		}
+		left_reduced := reduce(left, level+1)
+		if left_reduced do return true
+		right_reduced := reduce(right, level+1)
+		return right_reduced
+	}
+}
+
+parse_tree :: proc(input : string, node : ^Node) { 
+	curr := node
 	for r,idx in input {
-		if r == '[' {
-			left_side = input[:idx] 
-			log.info("Left:", left_side, idx)
-			break
+		log.info(r)
+		switch r {
+			case '[':
+			curr.left = new(Node)
+			curr.left.is_left = true
+			curr.left.parent = curr
+			curr = curr.left
+			case ']':
+			curr = curr.parent
+			case ',':
+			curr.right = new(Node)
+			curr.right.is_right = true
+			curr.right.parent = curr
+			curr = curr.right
+			case '0'..'9':
+			curr.leaf = true
+			curr.val = strconv.atoi(input[idx:idx+1])
+			curr = curr.parent
 		}
 	}
-
-	for idx in 0..<len(input) {
-		ridx := len(input) - idx - 1
-		if input[ridx] == ']' {
-			right_side = input[ridx+1:][:idx]
-			log.info("Right:", right_side, idx)
-			break
-		}
-	}
-
-	return out
 }
 
 day18 :: proc() {
 	input := day18_input
 
 	line, ok := strings.split_iterator(&input, "\n")
-	root : Pair
-	for ok {
+	root : Node
+	/*for ok {*/
 		line = strings.trim_space(line)
 		log.info(line)
 
-		root = parse_pair(line[1:len(line)-1])
+		parse_tree(line[0:len(line)], &root)
+		print_tree(&root, 0)
 		line, ok = strings.split_iterator(&input, "\n")
-	}
+	/*}*/
+	reduce(&root, 0)
+	print_tree(&root, 0)
 }
 
 day17 :: proc() { 
